@@ -5,20 +5,26 @@ using namespace std;
  
 class EndDevices{
    private:
-   int mac_address;
+   int deviceId;
+   string MAC_Address;
    string message;
    
    public:
     bool ack;
     EndDevices() {
-        mac_address = 0;
+        deviceId = 0;
+        MAC_Address="";
         ack=false;
     }
-    EndDevices(int mac){
-        mac_address=mac;
+    EndDevices(int Id,string mac){
+        deviceId=Id;
+        MAC_Address=mac;
     }
-    int get(){
-        return mac_address;
+    int getId(){
+        return deviceId;
+    }
+    string getMAC(){
+        return MAC_Address;
     }
     void sendData(string data){
         message=data;
@@ -28,9 +34,9 @@ class EndDevices{
     return message;
    }
 
-   void sendAck(int sender){
+   void sendAck(int reciever){
      ack=true;
-     cout<<"Device "<<sender<<" sends ACK to hub"<<endl;
+     cout<<"Device "<<reciever<<" sends ACK to hub"<<endl;
      
    }
 
@@ -47,6 +53,7 @@ class EndDevices{
     }
    
 };
+
 class hub{
   private:
   vector<EndDevices> connected_devices;        //vector for storing endDevice objects in hub
@@ -56,7 +63,7 @@ class hub{
     connected_devices.push_back(devices);
   } 
   void print_connection(int i){
-    cout<<"Connection successfully created between hub and device "<<connected_devices[i].get()<<endl;
+    cout<<"Connection successfully created between hub and device "<<connected_devices[i].getId()<<endl;
   }
   void broadcast(vector<EndDevices> devices, int sender){
     cout<<endl;
@@ -90,10 +97,10 @@ class hub{
   }
   //broadcast Ack
   void BroadcastAck(int sender,int reciever){
-     if(connected_devices[sender-1].ack==true){
+     if(connected_devices[reciever-1].ack==true){
       for(int i=0;i<connected_devices.size();i++){
        int Current_device=i+1;
-       if(Current_device!=reciever){
+       if(Current_device!=sender){
          cout<<"ACK was recieved by device "<<i+1<<" but it was discarded"<<endl;
        }
        else{
@@ -102,4 +109,19 @@ class hub{
       }
      }
   }
+};
+
+class Switch{
+  private:
+  int switchId;
+  vector<EndDevices> connected_devices;
+  public:
+   void topology(EndDevices devices){
+    //connecting end devices to switch
+    connected_devices.push_back(devices);
+   } 
+  void print_connection(int i){
+    cout<<"Connection successfully created between switch and device with MAC_Address: "<<connected_devices[i].getMAC()<<endl;
+  }
+
 };

@@ -4,6 +4,6 @@
 using namespace std;
 int main() {
     prompt p;
-    p.display();
+    p.run();
     return 0;
 }

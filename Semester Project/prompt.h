@@ -1,11 +1,13 @@
 #include<iostream>
 #include "layers.h"
+#include<time.h>
 #include<map>
 #include<vector>
 using namespace std;
-class prompt{
-    public:
-    void display(){
+
+class physical_prompt{
+  public:
+    void run(){
     while(true){
     int d,sender,reciever;
     string data;
@@ -25,7 +27,7 @@ class prompt{
     
     for(int i=0;i<d;i++){
       //creating end devices
-      devices.push_back(EndDevices(i+1));
+      devices.push_back(EndDevices(i+1,""));
       //connecting end devices with hub
       h.topology(devices[i]);
       if(i==0){
@@ -67,10 +69,101 @@ class prompt{
     h.transmission(sender,reciever);
      //sender sends ack to hub
      cout<<endl;
-    devices[sender-1].sendAck(sender);
+    devices[sender-1].sendAck(reciever);
     //hub broadcast Ack
     h.BroadcastAck(sender,reciever);
     break;
   }
  }
 };
+
+class data_prompt{
+  public:
+  string generateMacAddress() {
+    
+    char mac[18];
+    sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256);
+    return mac;
+  }
+  void run(){
+    while(true){
+    int choice;
+    Switch s;
+    cout<<endl;
+    cout<<"Choose Test case: "<<endl;
+    cout<<endl;
+    cout << "1 :" <<"Create a switch with n end devices" << endl;
+    cout << "2 :"<<"Create two star topologies with n end devices each" << endl;
+    cin >> choice; 
+    if(choice==1){
+      int size;
+     cout<<endl;
+    //vector of objects of End devices
+    vector<EndDevices> devices; 
+    cout<<"Data Link layer implementation :"<<endl;
+    cout<<endl;
+    cout<<"Enter  the number of end devices"<<endl;
+    cin>>size;
+    if(size<2){
+        cout<<"There should be atleast two devices. Enter valid number"<<endl;
+        continue;
+    }
+    srand(time(0));
+    for(int i=0;i<size;i++){
+      //creating end devices
+      string mac=generateMacAddress();
+      devices.push_back(EndDevices(i+1,mac));
+      //connexting devices with switch
+      s.topology(devices[i]);
+      if(i==0){
+        cout<<"Connection status :"<<endl;
+        cout<<endl;
+      }
+      s.print_connection(i);
+    }
+    }
+    
+    break;
+   }
+  }
+};
+class prompt{
+   public:
+   void run(){
+    while(true){
+    cout<<endl;
+    int choice;
+    map<int,string> mp;
+    mp={
+      {1,"Physical layer"},
+      {2,"Data Link Layer"}
+    };
+    cout<<"Choose a layer :"<<endl;
+    for(auto it:mp){
+      cout<<it.first<<" : "<<it.second<<endl; 
+    }
+    cin>>choice;
+    
+    switch (choice)
+    {
+    case 1:
+    {
+      physical_prompt p;
+      p.run();
+      break;
+    }
+    case 2:
+    {
+      data_prompt d;
+      d.run();
+      break;
+    }
+    default:
+    cout<<"Invalid Entry"<<endl;
+      break;
+    }
+    
+    }
+   }
+};
+  
