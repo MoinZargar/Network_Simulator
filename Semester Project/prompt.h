@@ -15,10 +15,10 @@ class physical_prompt{
     hub h;
     EndDevices end;
     //vector of objects of End devices
-    vector<EndDevices> devices; 
+    vector<EndDevices> devices;
     cout<<"Physical layer implementation"<<endl;
     cout<<endl;
-    cout<<"Enter  the number of end devices"<<endl;
+     cout<<"Enter  the number of end devices"<<endl;
     cin>>d;
     if(d<2){
         cout<<"There should be atleast two devices. Enter valid number"<<endl;
@@ -57,9 +57,12 @@ class physical_prompt{
     }
     cout<<endl;
     cout<<"Input the message that you would like to send "<<endl;
-    cin>>data;
+    cin.ignore();
+    getline(cin,data);
+  
+   
     //pass data to sender
-    devices[sender-1].sendData(data);
+    devices[sender-1].getData(data);
     //broadcasting data
     h.broadcast(devices,sender);
     //transmission status
@@ -79,6 +82,7 @@ class physical_prompt{
 
 class data_prompt{
   public:
+  
   string generateMacAddress() {
     
     char mac[18];
@@ -87,6 +91,12 @@ class data_prompt{
   }
   void run(){
     while(true){
+    int size,sender,reciever;
+    string data;
+    vector<EndDevices> devices; 
+    map<int,bool> mp;
+    hub h;
+    EndDevices end;
     int choice;
     Switch s;
     cout<<endl;
@@ -96,18 +106,29 @@ class data_prompt{
     cout << "2 :"<<"Create two star topologies with n end devices each" << endl;
     cin >> choice; 
     if(choice==1){
-      int size;
+    
      cout<<endl;
     //vector of objects of End devices
-    vector<EndDevices> devices; 
-    cout<<"Data Link layer implementation :"<<endl;
-    cout<<endl;
+  
     cout<<"Enter  the number of end devices"<<endl;
     cin>>size;
     if(size<2){
         cout<<"There should be atleast two devices. Enter valid number"<<endl;
         continue;
     }
+    int select;
+    map<int,string> flow;
+    flow={
+      {1,"Stop and Wait ARQ"},
+      {2,"Selective Repeat"}
+    };
+    cout<<endl;
+    cout<<"Choose a Flow Control Protocol :"<<endl;
+    cout<<endl;
+    for(auto it:flow){
+      cout<<it.first<<" : "<<it.second<<endl; 
+    }
+    cin>>select;
     srand(time(0));
     for(int i=0;i<size;i++){
       //creating end devices
@@ -121,8 +142,39 @@ class data_prompt{
       }
       s.print_connection(i);
     }
+       
+    end.prompt("sender",size,mp);
+    cin>>sender;
+    if(!mp[sender]){
+      cout<<"Invalid Entry"<<endl;
+      continue;
     }
-    
+    end.prompt("reciever",size,mp);
+    cin>>reciever;
+    if(!mp[reciever]){
+      cout<<"Invalid Entry"<<endl;
+      continue;
+    }
+    //if sender and reciever are same
+    if(sender==reciever){
+      cout<<"Sender and reciever can't be same "<<endl;
+      continue;
+    }
+    cout<<endl;
+    cout<<"Input the message that you would like to send "<<endl;
+    cin.ignore();
+    getline(cin,data);
+    //pass data to sender
+    devices[sender-1].getData(data);
+    //token passing
+    devices[sender-1].tokenCheck(devices,sender,size);
+    //switch stores mapping of device id and MAC address
+    s.MAC_table();
+    if(select==1){
+       devices[sender-1].StopAndWait();
+
+    }
+   }
     break;
    }
   }
