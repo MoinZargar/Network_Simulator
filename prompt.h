@@ -129,6 +129,10 @@ class data_prompt{
       cout<<it.first<<" : "<<it.second<<endl; 
     }
     cin>>select;
+    if(select!=1 && select!=2){
+      cout<<"Invalid Entry"<<endl;
+      continue;
+    }
     srand(time(0));
     for(int i=0;i<size;i++){
       //creating end devices
@@ -183,9 +187,7 @@ class data_prompt{
       devices[sender-1].Selective_Repeat();
     
     }
-    else{
-      continue;
-    }
+    
    }
     break;
    }

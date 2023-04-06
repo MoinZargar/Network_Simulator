@@ -85,6 +85,7 @@ class EndDevices{
             continue;          //resend packet
            }
            else{
+            cout<<"Sender sends packet with sequence number "<<sender_buffer<<endl;
             AckNo=reciever(window,i);
             //reciever reaches at the end of window
               if(AckNo==-1){
@@ -109,7 +110,7 @@ class EndDevices{
     int j=0;
     int reciever(vector<int> window,int i){
        
-        cout<<"Sender sends packet with sequence number "<<sender_buffer<<endl;
+        
         if(sender_buffer==window[j] && i==j && j<window.size()){
         reciever_buffer=sender_buffer;
          ack=true;
@@ -146,12 +147,12 @@ class EndDevices{
        }
       int R_n=0;
       int selective_reciever(int packet){
-        cout<<"Sender sends packet with sequence number "<<packet<<endl;
+        
         selective_window[packet]=true;
         int AckNo=packet;
         //slide recieving window if consecutive elements are marked
         int count=0;
-          for(int j=0;j<=selective_window.size();j++){
+          for(int j=0;j<selective_window.size();j++){
                 if(selective_window[j]==false){
                   break;
                 }
@@ -164,13 +165,13 @@ class EndDevices{
       }
     void selective_sender(){
            int S_n=0,S_f=1,S_z=selective_window.size();
-           int i=0;
+           int i=0,AckNo;   
            while(i<S_z){
-           srand(time(0));
+           srand(time(NULL));
            ack=false;
            int timeout_duration=4,sending_time=rand()%6,recieving_time=rand()%6; 
           
-           int AckNo;
+          
            sleep(sending_time); 
            if(sending_time> timeout_duration){         //packet got lost
             cout<<"Sender sends packet with sequence number "<<i <<" but it got lost"<<endl; 
@@ -179,6 +180,7 @@ class EndDevices{
            }
            else{
             int packet=i;
+            cout<<"Sender sends packet with sequence number "<<packet<<endl;
             AckNo=selective_reciever(packet);
            
             if(recieving_time>timeout_duration){      //ACK got lost
@@ -189,7 +191,7 @@ class EndDevices{
               if(ack==true){
                 cout<<"ACK "<<AckNo<<" recieved"<<endl;
                 int count=0;
-                //sliding window if consecutive elemnts in window are marked
+                //slide window if consecutive elemnts in window are marked
               for(int j=0;j<=AckNo;j++){
                 if(selective_window[j]==false){
                   break;
@@ -209,16 +211,16 @@ class EndDevices{
          } 
          //timeout
           if(i==S_z){
-             cout<<"Time out"<<endl;
+            cout<<endl;
+             cout<<"Time out occured"<<endl;
             
              //check which packet  is not recieved and resend it
-             for(int i=0;i<selective_window.size();i++){
+             for(int j=0;j<selective_window.size();j++){
                
-              if(selective_window[i]==false){
-                cout<<"Packet "<<i<<" wasn't recieved"<<endl;
+              if(selective_window[j]==false){
+                cout<<"Resending Packet "<<j<<" as it wasn't recieved"<<endl;
                 //resending packet
-                int AckNo;
-                AckNo=selective_reciever(i);
+                AckNo=selective_reciever(j);
                 cout<<"ACK "<<AckNo<<" recieved"<<endl;
               }
              }
