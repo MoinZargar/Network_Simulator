@@ -120,7 +120,7 @@ class data_prompt{
     map<int,string> flow;
     flow={
       {1,"Stop and Wait ARQ"},
-      {2,"Go Back N ARQ"}
+      {2,"Selective Repeat"}
     };
     cout<<endl;
     cout<<"Choose a Flow Control Protocol :"<<endl;
@@ -178,10 +178,10 @@ class data_prompt{
        s.transmission(devices,sender,reciever);
 
     }
-    //for GO BACK N ARQ
+    //for Selective repeat
     else if(select==2){
-      
-      devices[sender-1].GoBackN();
+      devices[sender-1].Selective_Repeat();
+    
     }
     else{
       continue;

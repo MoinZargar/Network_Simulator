@@ -12,7 +12,7 @@ class EndDevices{
    string MAC_Address;
    string message;
    public:
-    vector<int> send_window;
+    map<int,bool> selective_window;
     int sender_buffer;
     int reciever_buffer;
     bool ack;
@@ -142,108 +142,99 @@ class EndDevices{
         cout<<endl;
         cout<<"Transmission Status :"<<endl;
         sender(window);
-        
-      }
-      //GBN Reciever
-      int k=0;
-      int GBN_Reciever(int packet,int j){
+           
+       }
+      int R_n=0;
+      int selective_reciever(int packet){
         cout<<"Sender sends packet with sequence number "<<packet<<endl;
-          if(packet==send_window[k] ){     //if sent packet is same as expected by reciever
-                k++;
-                if(k<send_window.size()){
-                  ack=true;
-                  return send_window[k];   //send next packet no. as ack    
-                }          
+        selective_window[packet]=true;
+        int AckNo=packet;
+        //slide recieving window if consecutive elements are marked
+        int count=0;
+          for(int j=0;j<=selective_window.size();j++){
+                if(selective_window[j]==false){
+                  break;
+                }
+                count++;
           }
-          else{
-            cout<<"Packet "<<send_window[j]<<" discarded"<<endl;
-            return send_window[k];
-          }
+          R_n=count;
+          ack=true;
+        return AckNo;
+
       }
-      //GBN Sender
-      void GBN_Sender(){
-        int S_f=send_window[0],S_n=send_window[1],S_z=7;
-        int i=0;
-        while(i<16){
+    void selective_sender(){
+           int S_n=0,S_f=1,S_z=selective_window.size();
+           int i=0;
+           while(i<S_z){
            srand(time(0));
            ack=false;
-           int timeout_duration=5,packet_timeout=3;  //packet_timeout is max time, after which packet or ack is considered to be lost
-           int sending_time=rand()%4,recieving_time=rand()%4;
-          //sending packets within window size
-          int j=S_f;
-          while(S_f<S_z && S_n<S_z){
-            
-            int packet;
-            //time taken to send packet
-            sleep(sending_time);
-            //packet lost condition
-            if(sending_time>packet_timeout){
-              cout<<"Packet "<<send_window[j]<<" got lost"<<endl;
+           int timeout_duration=4,sending_time=rand()%6,recieving_time=rand()%6; 
+          
+           int AckNo;
+           sleep(sending_time); 
+           if(sending_time> timeout_duration){         //packet got lost
+            cout<<"Sender sends packet with sequence number "<<i <<" but it got lost"<<endl; 
+            i++;
+            continue;
+           }
+           else{
+            int packet=i;
+            AckNo=selective_reciever(packet);
+           
+            if(recieving_time>timeout_duration){      //ACK got lost
+               cout<<"ACK "<<AckNo<< " got lost"<<endl;
+               i++;
+            }
+            else{
+              if(ack==true){
+                cout<<"ACK "<<AckNo<<" recieved"<<endl;
+                int count=0;
+                //sliding window if consecutive elemnts in window are marked
+              for(int j=0;j<=AckNo;j++){
+                if(selective_window[j]==false){
+                  break;
+                }
+                count++;
+              }
+              S_f=count;
               
-              j++;
-              packet=send_window[j];
-              S_n=j+1;
-            }
-            //if sending time is greater than timeout duration (overall clock)
-            //then Go Back from S_f
-            else if(sending_time>timeout_duration){
-              cout<<"Timer out resending frame"<<endl;
-              j=S_f;
-              packet=send_window[j];
-              S_n=j+1;
-              continue;
-            }
-            else{
-             packet=send_window[j];
-             j++;
-             S_n=j;
-
-            }
-            int AckNo;
-            AckNo=GBN_Reciever(packet,j);
-            //if recieving time of ack is greater than timeout duration (overall clock)
-            //then Go Back from S_f
-            if(recieving_time>timeout_duration){
-              cout<<"Timer out resending frame"<<endl;
-              j=S_f;
-              S_n=j+1;
-              continue;
-            }
-            //Ack lost condition
-            else if(recieving_time>packet_timeout){
-              cout<<"ACK "<<AckNo<<" got lost"<<endl;
-              j++;
-              S_n=j;
-            }
-
-            //ack recieved within time
-            else{
-              if(AckNo==S_f){
-                cout<<"ACK "<<AckNo<<" discarded"<<endl;
-                j++;
-                S_n=j;
-              }
-              else{
-                cout<<"ACK "<<AckNo<<" recieved successfully"<<endl;
-                S_f=AckNo;
-                
+              i++;
+              S_n=i;
               }
             }
-          }
-         
-        }
-        i=S_n;
-      }
-    //Go Back N ARQ Protocol
-    void GoBackN(){
-         cout<<endl;
-         //filling sender window
-         for(int i=0;i<16;i++){
-           send_window.push_back(i%8);
-         }
-         
-         GBN_Sender();
+            
+           }
+           
+          
+         } 
+         //timeout
+          if(i==S_z){
+             cout<<"Time out"<<endl;
+            
+             //check which packet  is not recieved and resend it
+             for(int i=0;i<selective_window.size();i++){
+               
+              if(selective_window[i]==false){
+                cout<<"Packet "<<i<<" wasn't recieved"<<endl;
+                //resending packet
+                int AckNo;
+                AckNo=selective_reciever(i);
+                cout<<"ACK "<<AckNo<<" recieved"<<endl;
+              }
+             }
+           }
     }
+   //Selective Repeat protocol
+   void Selective_Repeat(){
+    //m=4
+    cout<<endl;
+    int size=8;
+    for(int i=0;i<size;i++){
+      selective_window[i]=false;
+    }
+    selective_sender();
+
+   }
     void prompt(string DeviceType,int d,map<int,bool> &mp){
      
      for(int i=1;i<=d;i++){
