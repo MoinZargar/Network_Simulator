@@ -6,7 +6,10 @@
 #include<vector>
 #include <algorithm>
 using namespace std;
- 
+
+// Forward declaration of the Switch class
+class Switch;
+
 class EndDevices{
    private:
    int deviceId;
@@ -45,7 +48,11 @@ class EndDevices{
 
    void sendAck(int reciever){
      ack=true;
-     cout<<"Device "<<reciever<<" sends back ACK "<<endl;
+     cout<<endl;
+     cout<<"Acknowledgement Status: "<<endl;
+     cout<<endl;
+     cout<<"Device "<<reciever<<" sends back ACK to Hub "<<endl;
+     cout<<endl;
      
    }
    void tokenCheck(vector<EndDevices> &devices,int sender,int size){
@@ -257,10 +264,11 @@ class hub{
   int hub_ID;
   vector<EndDevices> connected_devices;        //vector for storing endDevice objects in hub
   public:
+  bool ack;
   string data;
   hub() {
         hub_ID= 0;
-        
+        ack=false;
     }
   hub(int Id){
         hub_ID=Id;
@@ -286,6 +294,7 @@ class hub{
   void print_connection(int i){
     cout<<"Connection successfully created between hub and device "<<connected_devices[i].getId()<<endl;
   }
+  
   void broadcast(vector<EndDevices> devices, int sender){
     cout<<endl;
     cout<<"A message is being broadcasted from the Hub"<<endl;
@@ -295,19 +304,21 @@ class hub{
    
     //hub broadcasts data 
     for(int i=0;i<connected_devices.size();i++){
-      if(i!=sender-1){
+      // if(i!=sender-1){
       connected_devices[i].getData(data);
-      }
+      // }
     }
     
   }
+  
   //status of transmission
   void transmission(int sender,int reciever){
     cout<<endl;
-    cout<<"Transmission status "<<endl;
+    cout<<"Transmission status: "<<endl;
+    cout<<endl;
     for(int i=0;i<connected_devices.size();i++){
        string message=connected_devices[i].SendData();
-       int Current_device=i+1;
+       int Current_device=connected_devices[i].getId();
        if(Current_device!=sender){
         if(Current_device!=reciever){
           cout<<message<<" was recieved by device "<<Current_device<<" but it was discarded"<<endl;
@@ -320,20 +331,23 @@ class hub{
   }
   //broadcast Ack
   void BroadcastAck(int sender,int reciever){
+     cout<<"Hub Broadcasts ACK"<<endl;
+     cout<<endl;
      if(connected_devices[reciever-1].ack==true){
       for(int i=0;i<connected_devices.size();i++){
-       int Current_device=i+1;
-       if(Current_device!=sender){
-         cout<<"ACK was recieved by device "<<i+1<<" but it was discarded"<<endl;
+       int Current_device=connected_devices[i].getId();
+       if(Current_device!=reciever){
+       if(Current_device!=sender ){
+         cout<<"ACK was recieved by device "<<Current_device<<" but it was discarded"<<endl;
        }
        else{
-        cout<<"ACK was recieved by device "<<i+1<<" and it was accepted"<<endl;
+        cout<<"ACK was recieved by device "<<Current_device<<" and it was accepted"<<endl;
        }
+      }
       }
      }
   }
 };
-
 class Switch{
   private:
   int switchId;
@@ -341,8 +355,14 @@ class Switch{
   map<int,string> mac_table;
   vector<EndDevices> connected_devices;
   vector<hub> connected_hubs;
-  public:
   string data;
+  public:
+   Switch(){
+    data="";
+   }
+   Switch(string message){
+     data=message;
+   }
    void topology(EndDevices &devices){
     //connecting end devices to switch
     connected_devices.push_back(devices);
@@ -408,6 +428,17 @@ class Switch{
      }
 
   }
+  int recieveData(int sender,int reciever,string message){
+    // get data from sorce hub
+    data=message;
+    int source_hub=findHubForDevice(sender);
+    int destination_hub=findHubForDevice(reciever);
+    cout<<"Switch recieved "<<message<<" from hub "<<source_hub+1<<endl;
+    //send data to destination hub
+    connected_hubs[destination_hub].data=message;
+    cout<<"Switch sends "<<message<<" to hub "<<destination_hub+1<<endl;
+    return destination_hub;
+  }
   void transmission(vector<EndDevices> &devices,int sender,int reciever){
     cout<<endl;
     cout<<"Transmission Status :"<<endl;
@@ -416,10 +447,10 @@ class Switch{
     bool token=connected_devices[sender-1].token;
     string data=devices[sender-1].SendData();
       if(token==true){
-      cout<<data<<" sent successfully from device with MAC "<<mac_table[sender]<< " to "<<mac_table[reciever]<<endl;
+      cout<<data<<" sent successfully from device with MAC "<<mac_table[sender]<< " to "<<mac_table[reciever]<<" via  switch"<<endl;
       }
   }
-  //send ack to sender
+  //send ack to sender in case of end devices
   void sendAck(int sender){
    bool ack=connected_devices[sender-1].ack;
    if(ack==true){
@@ -429,6 +460,19 @@ class Switch{
     cout<<"ACK not recieved by sender"<<endl;
    }
   
+  } 
+  //recieve ack from destination hub
+  void recieveAck(int destination_hub){
+   if(connected_hubs[destination_hub].ack==true){
+    cout<<"Hub "<<destination_hub+1<<" sends ACK to switch"<<endl;
+   }
   }
-  
+  //send ACK to source hub
+  void send_Ack(int source_hub){
+      connected_hubs[source_hub].ack=true;
+      cout<<"Switch sends ACK to Hub "<<source_hub+1<<endl; 
+  }
 };
+
+
+

@@ -67,14 +67,13 @@ class physical_prompt{
     h.broadcast(devices,sender);
     //transmission status
     cout<<endl;
-    cout<<"Transmission Status: "<<endl;
-    cout<<endl;
     h.transmission(sender,reciever);
-     //sender sends ack to hub
+     //reciever sends back ack to hub
      cout<<endl;
     devices[sender-1].sendAck(reciever);
     //hub broadcast Ack
     h.BroadcastAck(sender,reciever);
+    
     break;
   }
  }
@@ -267,18 +266,36 @@ class data_prompt{
       cout<<"Input the message that you would like to send "<<endl;
       cin.ignore();
       getline(cin, data2);
-      int currentHub=s2.findHubForDevice(sender);
-      
+      int source_hub=s2.findHubForDevice(sender);
       //pass data to sender
       devices2[sender-1].getData(data2);
-     
-      //broadcasting data
-      hub_vec[currentHub].broadcast(devices2,sender);
+      //hub recieves data
+      hub_vec[source_hub].data=data2;
+      //source hub broadcasts data
+      hub_vec[source_hub].broadcast(devices2,sender);
       // //transmission status
       cout<<endl;
-      hub_vec[currentHub].transmission(sender,reciever);
-      
-    
+      hub_vec[source_hub].transmission(sender,reciever);
+      //source hub sends data to switch
+      int destination_hub=s2.recieveData(sender,reciever,data2);
+      //destination hub broadcasts data
+      hub_vec[destination_hub].broadcast(devices2,sender);
+      // //transmission status
+      cout<<endl;
+      hub_vec[destination_hub].transmission(sender,reciever);
+      //reciever sends back ack to hub
+      cout<<endl;
+      devices2[sender-1].sendAck(reciever);
+      //destination hub broadcast Ack
+      hub_vec[destination_hub].BroadcastAck(sender,reciever);
+      //destination sends ack to switch
+      hub_vec[destination_hub].ack=true;
+      s2.recieveAck(destination_hub);
+      //switch sends ack to source hub
+      s2.send_Ack(source_hub);
+      //source hub broadcast ACK
+      hub_vec[source_hub].BroadcastAck(sender,reciever);
+      break;
    }
    }
   }
