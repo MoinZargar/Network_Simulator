@@ -4,6 +4,7 @@
 #include<chrono>
 #include<map>
 #include<vector>
+#include <algorithm>
 using namespace std;
  
 class EndDevices{
@@ -253,11 +254,34 @@ class EndDevices{
 
 class hub{
   private:
+  int hub_ID;
   vector<EndDevices> connected_devices;        //vector for storing endDevice objects in hub
   public:
+  string data;
+  hub() {
+        hub_ID= 0;
+        
+    }
+  hub(int Id){
+        hub_ID=Id;
+        
+  }
+  int getId(){
+        return hub_ID;
+   }
+   //return devices connected to hub
+  vector<EndDevices> getDevices(){
+    return connected_devices;
+  }
   void topology(EndDevices &devices){
     //connecting end devices to hub
     connected_devices.push_back(devices);
+    
+  }
+  void connection(int i){
+    for(int j=0;j<connected_devices.size();j++){
+      cout<<"Connection Established between hub "<<i<<" and End device with ID "<<connected_devices[j].getId()<<endl;
+    }
   } 
   void print_connection(int i){
     cout<<"Connection successfully created between hub and device "<<connected_devices[i].getId()<<endl;
@@ -313,9 +337,12 @@ class hub{
 class Switch{
   private:
   int switchId;
+  map<int, vector<int>> hub_DeviceMap;
   map<int,string> mac_table;
   vector<EndDevices> connected_devices;
+  vector<hub> connected_hubs;
   public:
+  string data;
    void topology(EndDevices &devices){
     //connecting end devices to switch
     connected_devices.push_back(devices);
@@ -323,6 +350,54 @@ class Switch{
   void print_connection(int i){
     cout<<"Connection successfully established between switch and device with MAC_Address: "<<connected_devices[i].getMAC()<<endl;
   }
+  void topology(hub &hubs){
+    //connecting hubs to switch
+    connected_hubs.push_back(hubs);
+  }
+  void hub_print_connection(int i){
+    cout<<"Connection successfully established between switch and hub with Hub ID : "<<connected_hubs[i].getId()<<endl;
+  }
+  void HubToDeviceMap(int hubId,vector<EndDevices> &devices){
+       vector<int> devices_id;
+      for(int i=0;i<devices.size();i++){
+        int id=devices[i].getId();
+        devices_id.push_back(id);
+      }
+      //mapping between hub and end devices connected to it
+      hub_DeviceMap[hubId]=devices_id;
+
+  }
+  void print_HubToDeviceMap(){
+    cout<<"Mapping of Hub and End devices, stored in switch"<<endl;
+    cout<<endl;
+    for(auto it:hub_DeviceMap){
+        int hubId = it.first+1;
+        vector<int> deviceIds = it.second;
+        cout << "End devices ";
+        for (int i = 0; i < deviceIds.size(); i++) {
+            cout << deviceIds[i];
+            if (i < deviceIds.size() - 1) {
+                cout << ",";
+            }
+        }
+        cout << " are connected to hub " << hubId << endl;
+        
+         
+    }
+    cout<<endl;
+  }
+  int findHubForDevice(int deviceId) {
+    for (auto iter = hub_DeviceMap.begin(); iter != hub_DeviceMap.end(); ++iter) {
+        int hubId = iter->first;
+        vector<int> deviceIds = iter->second;
+        if (find(deviceIds.begin(), deviceIds.end(), deviceId) != deviceIds.end()) {
+            return hubId;
+        }
+    }
+    // Device not found in any hub
+    return -1;
+}
+
   void MAC_table(){
      
      //switch storing mapping of device id and MAC address

@@ -103,7 +103,7 @@ class data_prompt{
     cout<<"Choose Test case: "<<endl;
     cout<<endl;
     cout << "1 :" <<"Create a switch with n end devices" << endl;
-    cout << "2 :"<<"Create two star topologies with n end devices each" << endl;
+    cout << "2 :"<<"Create n star topologies with m end devices each" << endl;
     cin >> choice; 
     if(choice==1){
     
@@ -185,11 +185,101 @@ class data_prompt{
     //for Selective repeat
     else if(select==2){
       devices[sender-1].Selective_Repeat();
-    
+      s.transmission(devices,sender,reciever);
     }
     
    }
-    break;
+    else if(choice==2){
+      vector<EndDevices> devices2;
+      Switch s2;
+      hub h2;
+      int hubSize;
+      int deviceNum;
+      string data2;
+      vector<hub> hub_vec;
+      map<int,bool> mp2;
+      cout<<endl;
+      cout<<"Enter the number of hubs required"<<endl;
+      cin>>hubSize;
+      
+     
+       for(int i=0;i<hubSize;i++){
+        //creating objects of hub
+         hub_vec.push_back(hub(i+1));
+         //connecting hub with switch
+       
+        s2.topology(hub_vec[i]);
+        if(i==0){
+          cout<<"Connection status :"<<endl;
+          cout<<endl;
+        }
+        s2.hub_print_connection(i);
+       }
+       cout<<endl;
+       cout<<"Enter the number of end devices to be connected to each hub"<<endl;
+       cin>>deviceNum;
+      if(deviceNum<2){
+        cout<<"There should be atleast two devices. Enter valid number"<<endl;
+        continue;
+      }
+      int id=1,k=0;
+      for(int i=0;i<hub_vec.size();i++){
+        for(int j=0;j<deviceNum;j++){
+          devices2.push_back(EndDevices(id,""));
+          //connecting end devices with hub
+          hub_vec[i].topology(devices2[k++]);
+          id++;
+      }
+      }
+      for(int i=0;i<hub_vec.size();i++){
+        cout<<endl;
+        hub_vec[i].connection(i+1);
+
+      }
+      cout<<endl;
+      for(int i=0;i<hub_vec.size();i++){
+        //getting array of connected end devices to hub[i]
+        vector<EndDevices> connected_devices=hub_vec[i].getDevices();
+        //mapping of hub and devices connected to it
+        s2.HubToDeviceMap(i,connected_devices);
+      }
+      s2.print_HubToDeviceMap();
+      int total_devices=deviceNum*hubSize;
+      end.prompt("sender",total_devices,mp2);
+      cin>>sender;
+
+      if(!mp2[sender]){
+        cout<<"Invalid Entry"<<endl;
+        continue;
+      }
+      end.prompt("reciever",total_devices,mp2);
+      cin>>reciever;
+      if(!mp2[reciever]){
+        cout<<"Invalid Entry"<<endl;
+        continue;
+      }
+      //if sender and reciever are same
+      if(sender==reciever){
+        cout<<"Sender and reciever can't be same "<<endl;
+        continue;
+      }
+      cout<<endl;
+      cout<<"Input the message that you would like to send "<<endl;
+      cin.ignore();
+      getline(cin, data2);
+      int currentHub=s2.findHubForDevice(sender);
+      
+      //pass data to sender
+      devices2[sender-1].getData(data2);
+     
+      //broadcasting data
+      hub_vec[currentHub].broadcast(devices2,sender);
+      // //transmission status
+      cout<<endl;
+      hub_vec[currentHub].transmission(sender,reciever);
+      
+    
+   }
    }
   }
 };
