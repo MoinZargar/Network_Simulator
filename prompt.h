@@ -15,9 +15,9 @@ class physical_prompt{
     hub h;
     EndDevices end;
     //vector of objects of End devices
+    
     vector<EndDevices> devices;
-    cout<<"Physical layer implementation"<<endl;
-    cout<<endl;
+    
      cout<<"Enter  the number of end devices"<<endl;
     cin>>d;
     if(d<2){
@@ -88,7 +88,7 @@ class data_prompt{
     sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256);
     return mac;
   }
-  void run(){
+  void run(int choice,int hubSize){
     while(true){
     int size,sender,reciever;
     string data;
@@ -96,14 +96,10 @@ class data_prompt{
     map<int,bool> mp;
     hub h;
     EndDevices end;
-    int choice;
+   
     Switch s;
     cout<<endl;
-    cout<<"Choose Test case: "<<endl;
-    cout<<endl;
-    cout << "1 :" <<"Create a switch with n end devices" << endl;
-    cout << "2 :"<<"Create n star topologies with m end devices each" << endl;
-    cin >> choice; 
+    
     if(choice==1){
     
      cout<<endl;
@@ -179,12 +175,14 @@ class data_prompt{
     if(select==1){
        devices[sender-1].StopAndWait();
        s.transmission(devices,sender,reciever);
+       break;
 
     }
     //for Selective repeat
     else if(select==2){
       devices[sender-1].Selective_Repeat();
       s.transmission(devices,sender,reciever);
+      break;
     }
     
    }
@@ -192,14 +190,13 @@ class data_prompt{
       vector<EndDevices> devices2;
       Switch s2;
       hub h2;
-      int hubSize;
+     
       int deviceNum;
       string data2;
       vector<hub> hub_vec;
       map<int,bool> mp2;
       cout<<endl;
-      cout<<"Enter the number of hubs required"<<endl;
-      cin>>hubSize;
+     
       
      
        for(int i=0;i<hubSize;i++){
@@ -300,35 +297,50 @@ class data_prompt{
    }
   }
 };
+
 class prompt{
    public:
    void run(){
     while(true){
     cout<<endl;
-    int choice;
-    map<int,string> mp;
-    mp={
-      {1,"Physical layer"},
-      {2,"Data Link Layer"}
-    };
-    cout<<"Choose a layer :"<<endl;
-    for(auto it:mp){
-      cout<<it.first<<" : "<<it.second<<endl; 
+    int choice,hubs,switches,both;
+
+    map<int,string> choose;
+    choose[0]="Hub";
+    choose[1]="Switch";
+    cout<<"Choose a device "<<endl;
+    for(int i=0;i<2;i++){
+      cout<<i+1<<": "<<choose[i]<<endl;
     }
+    cout<<endl;
+    
     cin>>choice;
     
     switch (choice)
     {
     case 1:
     {
+      cout<<endl;
+      cout<<"Enter the number of hubs required"<<endl;
+      cout<<endl;
+      cin>>hubs;
+      if(hubs==1){
       physical_prompt p;
       p.run();
+
       break;
+      }
+      else{
+        //mutiple hubs 
+        data_prompt d;
+        d.run(2,hubs);
+        break;
+      }
     }
     case 2:
     {
       data_prompt d;
-      d.run();
+      d.run(1,hubs);
       break;
     }
     default:
@@ -340,3 +352,4 @@ class prompt{
    }
 };
   
+
