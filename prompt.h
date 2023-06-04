@@ -27,7 +27,7 @@ class physical_prompt{
     
     for(int i=0;i<d;i++){
       //creating end devices
-      devices.push_back(EndDevices(i+1,""));
+      devices.push_back(EndDevices(i+1,"",""));
       //connecting end devices with hub
       h.topology(devices[i]);
       if(i==0){
@@ -83,7 +83,7 @@ class data_prompt{
   public:
   
   string generateMacAddress() {
-    
+    srand(time(0));
     char mac[18];
     sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256);
     return mac;
@@ -132,8 +132,8 @@ class data_prompt{
     for(int i=0;i<size;i++){
       //creating end devices
       string mac=generateMacAddress();
-      devices.push_back(EndDevices(i+1,mac));
-      //connexting devices with switch
+      devices.push_back(EndDevices(i+1,mac,""));
+      //connecting devices with switch
       s.topology(devices[i]);
       if(i==0){
         cout<<"Connection status :"<<endl;
@@ -221,7 +221,7 @@ class data_prompt{
       int id=1,k=0;
       for(int i=0;i<hub_vec.size();i++){
         for(int j=0;j<deviceNum;j++){
-          devices2.push_back(EndDevices(id,""));
+          devices2.push_back(EndDevices(id,"",""));
           //connecting end devices with hub
           hub_vec[i].topology(devices2[k++]);
           id++;
@@ -298,6 +298,111 @@ class data_prompt{
   }
 };
 
+class network_prompt:public data_prompt{
+  public:
+  string mac1,mac2;
+  Switch s1,s2;
+  EndDevices end;
+  vector<EndDevices> devices;
+  map<int,bool> mp;
+  string message;
+  void assign_mac(){
+     srand(time(0));
+     mac1=generateMacAddress();
+     mac2=generateMacAddress();
+     while(mac1==mac2){
+      mac2=generateMacAddress();
+     }
+  }
+  void run(){
+    while(true){
+     assign_mac();
+     Router r("10.0.0.0/24","20.0.0.0/24",mac1,mac2);
+     assign_mac();
+     //end devices in Network 1
+     devices.push_back(EndDevices(1,mac1,"10.0.0.10/24"));
+     devices.push_back(EndDevices(2,mac2,"10.0.0.9/24"));
+    
+      //end devices in Network 2
+     assign_mac();
+     devices.push_back(EndDevices(4,mac1,"20.0.0.10/24"));
+     devices.push_back(EndDevices(5,mac2,"20.0.0.9/24"));
+    
+     //connecting end devices to respective switches
+     
+     s1.topology(devices[0]);
+     s1.topology(devices[1]);
+     
+     s2.topology(devices[2]);
+     s2.topology(devices[3]);
+    
+     //connecting switches to router
+     r.ConnectSwitch(s1);
+     r.ConnectSwitch(s2);
+     int sender, reciever;
+     end.prompt("Sender",4,mp);
+     cin>>sender;
+     end.prompt("Reciever",4,mp);
+     cin>>reciever;
+     //if sender and reciever are same
+      if(sender==reciever){
+      cout<<"Sender and reciever can't be same "<<endl;
+      continue;
+      }
+      cout<<"Enter a message "<<endl;
+      cin>>message;
+      devices[sender-1].getData(message);
+      string SourceIp=devices[sender-1].getIP();
+      string DestinationIp=devices[reciever-1].getIP();
+      cout<<"Source IP : "<<SourceIp<<endl;
+      cout<<"Destination IP : "<<DestinationIp<<endl;
+      cout<<endl;
+      //iniatialise arp cache
+       for(int i=0;i<4;i++){
+        string deviceIp=devices[i].getIP();
+        string deviceMac=devices[i].getMAC();
+        devices[i].arp_cache(deviceIp,deviceMac);
+       }
+       devices[sender-1].print_ArpCache();
+       // if sender and reciever are in same network
+       vector<int> NID1={1,2},NID2={4,5};
+       int x=count(NID1.begin(),NID1.end(),sender);
+       int y=count(NID1.begin(),NID1.end(),reciever);
+       int p=count(NID2.begin(),NID2.end(),sender);
+       int q=count(NID2.begin(),NID2.end(),reciever);
+       if(x && y){
+        //Both sender and reciever are in Network 1
+        //sender will check in its arp cache for entry of reciever
+        string isPresent=devices[sender-1].arp[DestinationIp];
+        if(!isPresent.length()){
+          //send arp request
+          cout<<endl;
+          cout<<"Sender sends ARP request"<<endl;
+          string destination_Mac=s1.broadcast_Arp(DestinationIp);
+          //sender updates its arp cache
+          devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+          cout<<"Updated Arp cache :"<<endl;
+          devices[sender-1].print_ArpCache();
+          //send message
+          s1.sendMessage(devices[sender-1],DestinationIp);
+        }
+        
+
+       }
+       else if(p && q){
+        //Both sender and reciever are in Network 2
+       }
+       else{
+        //sender and reciever are in different networks
+       }
+       break;
+    }
+    
+   
+ 
+  }
+};
+
 class prompt{
    public:
    void run(){
@@ -308,8 +413,9 @@ class prompt{
     map<int,string> choose;
     choose[0]="Hub";
     choose[1]="Switch";
+    choose[2]="Router";
     cout<<"Choose a device "<<endl;
-    for(int i=0;i<2;i++){
+    for(int i=0;i<choose.size();i++){
       cout<<i+1<<": "<<choose[i]<<endl;
     }
     cout<<endl;
@@ -341,6 +447,12 @@ class prompt{
     {
       data_prompt d;
       d.run(1,hubs);
+      break;
+    }
+    case 3:
+    {
+      network_prompt n;
+      n.run();
       break;
     }
     default:

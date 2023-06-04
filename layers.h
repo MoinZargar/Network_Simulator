@@ -14,8 +14,10 @@ class EndDevices{
    private:
    int deviceId;
    string MAC_Address;
+   string IP_Address;
    string message;
    public:
+    map<string,string> arp;
     map<int,bool> selective_window;
     int sender_buffer;
     int reciever_buffer;
@@ -27,15 +29,20 @@ class EndDevices{
         ack=false;
         token=false;
     }
-    EndDevices(int Id,string mac){
+    EndDevices(int Id,string mac,string ip){
         deviceId=Id;
         MAC_Address=mac;
+        IP_Address=ip;
+
     }
     int getId(){
         return deviceId;
     }
     string getMAC(){
         return MAC_Address;
+    }
+    string getIP(){
+        return IP_Address;
     }
     void getData(string data){
         message=data;
@@ -256,7 +263,18 @@ class EndDevices{
       cout<<i+1<<" : "<<"device "+to_string(i+1)<<endl;
      }
     }
-   
+   //arp cache
+   void arp_cache(string ip,string mac){
+        arp[ip]=mac;      
+        
+   }
+   void print_ArpCache(){
+        cout<<endl;
+        cout<<"ARP Cache of sender is as :"<<endl;
+        for(auto it: arp){
+          cout<<"IP : "<<it.first<<" -> "<<"MAC: "<<it.second<<endl;
+        }
+   }
 };
 
 class hub{
@@ -348,12 +366,12 @@ class hub{
      }
   }
 };
-class Switch{
+class Switch :public EndDevices{
   private:
   int switchId;
   map<int, vector<int>> hub_DeviceMap;
   map<int,string> mac_table;
-  vector<EndDevices> connected_devices;
+  vector<EndDevices*> connected_devices;
   vector<hub> connected_hubs;
   string data;
   public:
@@ -365,10 +383,10 @@ class Switch{
    }
    void topology(EndDevices &devices){
     //connecting end devices to switch
-    connected_devices.push_back(devices);
+    connected_devices.push_back(&devices);
    } 
   void print_connection(int i){
-    cout<<"Connection successfully established between switch and device with MAC_Address: "<<connected_devices[i].getMAC()<<endl;
+    cout<<"Connection successfully established between switch and device with MAC_Address: "<<connected_devices[i]->getMAC()<<endl;
   }
   void topology(hub &hubs){
     //connecting hubs to switch
@@ -422,8 +440,8 @@ class Switch{
      
      //switch storing mapping of device id and MAC address
      for(int i=0;i<connected_devices.size();i++){
-          int id=connected_devices[i].getId();
-          string mac=connected_devices[i].getMAC();
+          int id=connected_devices[i]->getId();
+          string mac=connected_devices[i]->getMAC();
           mac_table[id]=mac;
      }
 
@@ -444,7 +462,7 @@ class Switch{
     cout<<"Transmission Status :"<<endl;
     cout<<endl;
     
-    bool token=connected_devices[sender-1].token;
+    bool token=connected_devices[sender-1]->token;
     string data=devices[sender-1].SendData();
       if(token==true){
       cout<<data<<" sent successfully from device with MAC "<<mac_table[sender]<< " to "<<mac_table[reciever]<<" via  switch"<<endl;
@@ -452,7 +470,7 @@ class Switch{
   }
   //send ack to sender in case of end devices
   void sendAck(int sender){
-   bool ack=connected_devices[sender-1].ack;
+   bool ack=connected_devices[sender-1]->ack;
    if(ack==true){
    cout<<"ACK was successfully recieved by sender with MAC Address "<<mac_table[sender]<<endl;
    }
@@ -472,7 +490,45 @@ class Switch{
       connected_hubs[source_hub].ack=true;
       cout<<"Switch sends ACK to Hub "<<source_hub+1<<endl; 
   }
+
+  //broadcast arp request
+  string broadcast_Arp(string destinationIp){
+    cout<<endl;
+    cout<<"Who is "<<destinationIp<<" ?"<<endl;
+     for(int i=0;i<connected_devices.size();i++){
+      string result=connected_devices[i]->arp[destinationIp];
+      if(result.length()!=0){
+         cout<<"Device with IP "<<connected_devices[i]->getIP()<<" responds. I am "<<destinationIp<<endl;
+       return connected_devices[i]->getMAC();
+      }
+      
+     }
+  
+  
+  }
+   //send message
+   void sendMessage(EndDevices & devices ,string destinationIP){
+           cout<<endl;
+           string destination_mac=devices.arp[destinationIP];
+           string source_mac=devices.getMAC();
+           cout<<devices.SendData()<<" sent successfully from device with MAC "<<source_mac<<" to "<<destination_mac<<endl;
+   }
 };
 
 
-
+class Router: public EndDevices{
+ public:
+  string IP1,IP2,MAC1,MAC2;
+  vector<Switch> connected_devices;
+  //intialising ip and mac of interfaces of router
+  Router(string IP1,string IP2,string  MAC1,string  MAC2){
+    this->IP1=IP1;
+    this->IP2=IP2;
+    this->MAC1=MAC1;
+    this->MAC2=MAC2;
+  }
+  //connect switch to router
+  void ConnectSwitch(Switch& s){
+    connected_devices.push_back(s);
+  }
+};
