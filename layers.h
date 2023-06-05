@@ -4,6 +4,8 @@
 #include<chrono>
 #include<map>
 #include<vector>
+#include <random>
+#include <bitset>
 #include <algorithm>
 using namespace std;
 
@@ -366,6 +368,81 @@ class hub{
      }
   }
 };
+
+
+class Router: public EndDevices{
+ public:
+  string IP1,IP2,MAC1,MAC2;
+  vector<Switch> connected_devices;
+  //intialising ip and mac of interfaces of router
+  void setAddress(string IP1,string IP2,string  MAC1,string  MAC2){
+    this->IP1=IP1;
+    this->IP2=IP2;
+    this->MAC1=MAC1;
+    this->MAC2=MAC2;
+  }
+  //connect switch to router
+  void ConnectSwitch(Switch& s){
+    connected_devices.push_back(s);
+  }
+  //generate NID 
+  
+int random(int min, int max) {
+ 
+  return rand() % (max - min + 1) + min;
+}
+
+// function to generate a random NID
+    string generate_NID() {
+      string NID = "";
+      // Generate four octets randomly between 0 and 255
+      for (int i = 0; i < 4; i++) {
+        int octet = random(0, 255);
+        // Append the octet to the IPv4 address with a dot
+        if(i<2){
+        NID += to_string(octet) + ".";
+        }
+        else{
+          NID+=to_string(0)+".";
+        }
+      }
+      // Remove the last dot
+      NID.pop_back();
+      return NID;
+}
+//generate classless IPV4 Address
+string generate_classless_ip(string NID){
+  NID.pop_back();
+  
+    for (int i = 0; i < 4; i++) {
+        int octet = random(0, 255);
+        // Append the octet to the IPv4 address with a dot
+        
+        if(i==3){
+          NID+=to_string(octet)+"/24";
+        }
+      }
+      
+      return NID;
+}
+bool sameNID(string sourceIp,string destinationIp){
+  for(int i=0;i<6;i++){
+    if(sourceIp[i]!=destinationIp[i]){
+      return false;
+    }
+  }
+  return true;
+}
+int NetworkNo(string sourceIp){
+  if(IP1.substr(0,6)==sourceIp.substr(0,6)){
+    return 1;
+  }
+  else{
+    return 2;
+  }
+}
+};
+
 class Switch :public EndDevices{
   private:
   int switchId;
@@ -492,16 +569,27 @@ class Switch :public EndDevices{
   }
 
   //broadcast arp request
-  string broadcast_Arp(string destinationIp){
+  string broadcast_Arp(string destinationIp,Router &r,int network){
+    cout<<"Switch broadcast ARP request"<<endl;
     cout<<endl;
     cout<<"Who is "<<destinationIp<<" ?"<<endl;
+    cout<<endl;
      for(int i=0;i<connected_devices.size();i++){
       string result=connected_devices[i]->arp[destinationIp];
       if(result.length()!=0){
-         cout<<"Device with IP "<<connected_devices[i]->getIP()<<" responds. I am "<<destinationIp<<endl;
+         cout<<"ARP Reply : Source IP : "<<connected_devices[i]->getIP()<<" Source MAC : "<<connected_devices[i]->getMAC()<<endl;
        return connected_devices[i]->getMAC();
       }
       
+     }
+     //return MAC address of default gateway
+     if(network==1){
+     cout<<"ARP Reply by Default Gateway : Source IP : "<<r.IP1<<" Source MAC : "<<r.MAC1<<endl;
+     return r.MAC1;
+     }
+     else{
+      cout<<"ARP Reply by Default Gateway : Source IP : "<<r.IP2<<" Source MAC : "<<r.MAC2<<endl;
+     return r.MAC2;
      }
   
   
@@ -515,20 +603,3 @@ class Switch :public EndDevices{
    }
 };
 
-
-class Router: public EndDevices{
- public:
-  string IP1,IP2,MAC1,MAC2;
-  vector<Switch> connected_devices;
-  //intialising ip and mac of interfaces of router
-  Router(string IP1,string IP2,string  MAC1,string  MAC2){
-    this->IP1=IP1;
-    this->IP2=IP2;
-    this->MAC1=MAC1;
-    this->MAC2=MAC2;
-  }
-  //connect switch to router
-  void ConnectSwitch(Switch& s){
-    connected_devices.push_back(s);
-  }
-};

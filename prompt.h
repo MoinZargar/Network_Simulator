@@ -83,7 +83,7 @@ class data_prompt{
   public:
   
   string generateMacAddress() {
-    srand(time(0));
+    
     char mac[18];
     sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256, rand() % 256);
     return mac;
@@ -300,33 +300,41 @@ class data_prompt{
 
 class network_prompt:public data_prompt{
   public:
-  string mac1,mac2;
   Switch s1,s2;
   EndDevices end;
   vector<EndDevices> devices;
   map<int,bool> mp;
   string message;
-  void assign_mac(){
-     srand(time(0));
-     mac1=generateMacAddress();
-     mac2=generateMacAddress();
-     while(mac1==mac2){
-      mac2=generateMacAddress();
-     }
-  }
+  string ip;
   void run(){
     while(true){
-     assign_mac();
-     Router r("10.0.0.0/24","20.0.0.0/24",mac1,mac2);
-     assign_mac();
+     
+     Router r;
+     string nid1=r.generate_NID();
+     string nid2=r.generate_NID();
+     string MAC1=generateMacAddress();
+     string MAC2=generateMacAddress();
+
+     r.setAddress(nid1,nid2,MAC1,MAC2);
+     vector<string> ipv4;
+     for(int i=0;i<4;i++){
+      if(i<2){
+        ip=r.generate_classless_ip(nid1);
+        ipv4.push_back(ip);
+
+      }
+      else{
+        ip=r.generate_classless_ip(nid2);
+        ipv4.push_back(ip);
+      }
+     }
      //end devices in Network 1
-     devices.push_back(EndDevices(1,mac1,"10.0.0.10/24"));
-     devices.push_back(EndDevices(2,mac2,"10.0.0.9/24"));
+     devices.push_back(EndDevices(1,generateMacAddress(),ipv4[0]));
+     devices.push_back(EndDevices(2,generateMacAddress(),ipv4[1]));
     
       //end devices in Network 2
-     assign_mac();
-     devices.push_back(EndDevices(4,mac1,"20.0.0.10/24"));
-     devices.push_back(EndDevices(5,mac2,"20.0.0.9/24"));
+     devices.push_back(EndDevices(4,generateMacAddress(),ipv4[2]));
+     devices.push_back(EndDevices(5,generateMacAddress(),ipv4[3]));
     
      //connecting end devices to respective switches
      
@@ -365,41 +373,92 @@ class network_prompt:public data_prompt{
        }
        devices[sender-1].print_ArpCache();
        // if sender and reciever are in same network
-       vector<int> NID1={1,2},NID2={4,5};
-       int x=count(NID1.begin(),NID1.end(),sender);
-       int y=count(NID1.begin(),NID1.end(),reciever);
-       int p=count(NID2.begin(),NID2.end(),sender);
-       int q=count(NID2.begin(),NID2.end(),reciever);
-       if(x && y){
-        //Both sender and reciever are in Network 1
+       bool check=r.sameNID(SourceIp,DestinationIp);
+       int network=r.NetworkNo(SourceIp);
+       if(check){
+        
+        //Both sender and reciever are in same network
         //sender will check in its arp cache for entry of reciever
         string isPresent=devices[sender-1].arp[DestinationIp];
         if(!isPresent.length()){
           //send arp request
           cout<<endl;
           cout<<"Sender sends ARP request"<<endl;
-          string destination_Mac=s1.broadcast_Arp(DestinationIp);
-          //sender updates its arp cache
-          devices[sender-1].arp_cache(DestinationIp,destination_Mac);
-          cout<<"Updated Arp cache :"<<endl;
-          devices[sender-1].print_ArpCache();
-          //send message
-          s1.sendMessage(devices[sender-1],DestinationIp);
+          
+          if(network==1){
+            string destination_Mac=s1.broadcast_Arp(DestinationIp,r,network);
+            //sender updates its arp cache
+            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+            
+            cout<<"Updated Arp cache :"<<endl;
+            devices[sender-1].print_ArpCache();
+            //send message
+            s1.sendMessage(devices[sender-1],DestinationIp);
+          }
+          else if(network==2){
+            string destination_Mac=s2.broadcast_Arp(DestinationIp,r,network);
+            //sender updates its arp cache
+            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+            cout<<"Updated Arp cache :"<<endl;
+            devices[sender-1].print_ArpCache();
+            //send message
+            s2.sendMessage(devices[sender-1],DestinationIp);
+          }
         }
-        
+        else{
+          //destination ip is in arp cache of sender no need to send arp request
+          if(network==1){
+            s1.sendMessage(devices[sender-1],DestinationIp);
+        }
+          else if(network==2){
+            s2.sendMessage(devices[sender-1],DestinationIp);
+          }
+      
+       
 
        }
-       else if(p && q){
-        //Both sender and reciever are in Network 2
+
        }
        else{
-        //sender and reciever are in different networks
+       
+        //sender and reciever are in two different networks
+        //sender checks for destination ip in its arp cache
+        string result=devices[sender-1].arp[DestinationIp];
+         
+        //reciever is not in arp cache of sender
+        if(result.length()==0){
+          //sender sends arp request
+          cout<<endl;
+          cout<<"Sender sends ARP request"<<endl;
+          if(network==1){
+            //switch broadcast arp request
+           
+            string destination_Mac=s1.broadcast_Arp(DestinationIp,r,network);
+            // sender updates its arp cache
+            devices[sender-1].arp_cache(r.IP1,destination_Mac);
+            cout<<"Updated Arp cache :"<<endl;
+            devices[sender-1].print_ArpCache();
+           
+          }
+          else if(network==2){
+            //switch broadcast arp request
+           
+            string destination_Mac=s2.broadcast_Arp(DestinationIp,r,network);
+            // sender updates its arp cache
+            devices[sender-1].arp_cache(r.IP2,destination_Mac);
+            cout<<"Updated Arp cache :"<<endl;
+            devices[sender-1].print_ArpCache();
+           
+          }
+        }
        }
+     
+       
        break;
     }
     
-   
  
+  
   }
 };
 
