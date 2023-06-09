@@ -7,6 +7,7 @@
 #include <random>
 #include <bitset>
 #include <algorithm>
+#include<iomanip>
 using namespace std;
 
 // Forward declaration of the Switch class
@@ -65,7 +66,7 @@ class EndDevices{
      
    }
    void tokenCheck(vector<EndDevices> &devices,int sender,int size){
-      
+      srand(time(nullptr));
       cout<<endl;
       cout<<"Token status :"<<endl;
       int i=rand()%size;
@@ -78,14 +79,14 @@ class EndDevices{
          cout<<"Currently sender doesn't have access to channel. Token is at device "<<Current_device+1<<" .Waiting to get access "<<endl;
          }
          i++;
-         sleep(3);
+         sleep(4);
       }
      
       cout<<"Sender has access to channel now"<<endl;
       
-     
     }
     void sender(vector<int> window){
+      srand(time(nullptr));
       cout<<endl;
        //window sliding 
        int i=0;
@@ -181,6 +182,7 @@ class EndDevices{
 
       }
     void selective_sender(){
+           srand(time(nullptr));
            int S_n=0,S_f=1,S_z=selective_window.size();
            int i=0,AckNo;   
            while(i<S_z){
@@ -374,6 +376,7 @@ class Router: public EndDevices{
  public:
   string IP1,IP2,MAC1,MAC2;
   vector<Switch> connected_devices;
+  map<string,pair<int,int>> routing_table;
   //intialising ip and mac of interfaces of router
   void setAddress(string IP1,string IP2,string  MAC1,string  MAC2){
     this->IP1=IP1;
@@ -441,6 +444,48 @@ int NetworkNo(string sourceIp){
     return 2;
   }
 }
+void Routing_Table(){
+  //manually configure the router
+  routing_table[IP1]={1,0};
+  routing_table[IP2]={2,0};
+}
+void Print_Routing_Table() {
+  cout<<endl;
+  std::cout << std::endl;
+  cout<<"Routing Table "<<endl;
+  std::cout << std::left << std::setw(15) << "NID";
+  std::cout << std::left << std::setw(12) << "Interface";
+  std::cout << std::left << std::setw(10) << "Next Hop" << std::endl;
+
+  std::cout << std::setfill('-') << std::setw(39) << "" << std::endl; // Separator line
+
+  std::cout << std::setfill(' '); // Reset fill character
+
+  for (auto it : routing_table) {
+    std::cout << std::left << std::setw(15) << it.first;
+    std::cout << std::left << std::setw(12) << it.second.first;
+    std::cout << std::left << std::setw(10) << it.second.second << std::endl;
+  }
+
+  std::cout << std::endl;
+}
+//traverse through routing table and check for NID that matches destination ip
+void routing_decision(string destinationIp){
+  for(auto it:routing_table){
+    //Check if NetworkId matches then break , it.first is NID HERE
+    if(sameNID(it.first,destinationIp)){
+       cout<<"Send packet to Network "<<it.first<<" on interface "<<it.second.first<<endl;
+       break;
+    }
+  }
+}
+void print_ArpCache(){
+        cout<<endl;
+        cout<<"ARP Cache of Router is as :"<<endl;
+        for(auto it: arp){
+          cout<<"IP : "<<it.first<<" -> "<<"MAC: "<<it.second<<endl;
+        }
+   }
 };
 
 class Switch :public EndDevices{
@@ -570,6 +615,7 @@ class Switch :public EndDevices{
 
   //broadcast arp request
   string broadcast_Arp(string destinationIp,Router &r,int network){
+    cout<<endl;
     cout<<"Switch broadcast ARP request"<<endl;
     cout<<endl;
     cout<<"Who is "<<destinationIp<<" ?"<<endl;

@@ -124,6 +124,7 @@ class data_prompt{
       cout<<it.first<<" : "<<it.second<<endl; 
     }
     cin>>select;
+   
     if(select!=1 && select!=2){
       cout<<"Invalid Entry"<<endl;
       continue;
@@ -167,13 +168,16 @@ class data_prompt{
     devices[sender-1].getData(data);
    
     //token passing
-    
+    cout<<endl;
     devices[sender-1].tokenCheck(devices,sender,size);
     //switch stores mapping of device id and MAC address
     s.MAC_table();
+    cout<<endl;
     //for Stop and wait ARQ
     if(select==1){
+      
        devices[sender-1].StopAndWait();
+       cout<<endl;
        s.transmission(devices,sender,reciever);
        break;
 
@@ -181,6 +185,7 @@ class data_prompt{
     //for Selective repeat
     else if(select==2){
       devices[sender-1].Selective_Repeat();
+      cout<<endl;
       s.transmission(devices,sender,reciever);
       break;
     }
@@ -362,6 +367,8 @@ class network_prompt:public data_prompt{
       devices[sender-1].getData(message);
       string SourceIp=devices[sender-1].getIP();
       string DestinationIp=devices[reciever-1].getIP();
+      cout<<endl;
+      cout<<endl;
       cout<<"Source IP : "<<SourceIp<<endl;
       cout<<"Destination IP : "<<DestinationIp<<endl;
       cout<<endl;
@@ -436,9 +443,28 @@ class network_prompt:public data_prompt{
             string destination_Mac=s1.broadcast_Arp(DestinationIp,r,network);
             // sender updates its arp cache
             devices[sender-1].arp_cache(r.IP1,destination_Mac);
-            cout<<"Updated Arp cache :"<<endl;
+            cout<<"Updated ARP cache :"<<endl;
             devices[sender-1].print_ArpCache();
-           
+            //print routing table 
+            r.Routing_Table();
+            cout<<endl;
+            r.Print_Routing_Table();
+            //traverse through routing table and check for NID that matches destination ip
+            r.routing_decision(DestinationIp);
+            //check ARP CACHE of router
+            r.arp_cache(r.IP1,r.MAC1);
+            r.arp_cache(r.IP2,r.MAC2);
+            cout<<endl;
+            r.print_ArpCache();
+            cout<<endl;
+            cout<<"Router sends ARP request "<<endl;
+            cout<<endl;
+            //switch will broadcast arp request 
+            destination_Mac=s2.broadcast_Arp(DestinationIp,r,1);
+            //sender updates its arp cache
+            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+            s2.sendMessage(devices[sender-1],DestinationIp);
+            
           }
           else if(network==2){
             //switch broadcast arp request
@@ -448,7 +474,26 @@ class network_prompt:public data_prompt{
             devices[sender-1].arp_cache(r.IP2,destination_Mac);
             cout<<"Updated Arp cache :"<<endl;
             devices[sender-1].print_ArpCache();
-           
+            //print routing table 
+            r.Routing_Table();
+            cout<<endl;
+            r.Print_Routing_Table();
+            //traverse through routing table and check for NID that matches destination ip
+            r.routing_decision(DestinationIp);
+            //check ARP CACHE of router
+            r.arp_cache(r.IP1,r.MAC1);
+            r.arp_cache(r.IP2,r.MAC2);
+            cout<<endl;
+            r.print_ArpCache();
+            cout<<endl;
+            cout<<"Router sends ARP request "<<endl;
+            cout<<endl;
+            //switch will broadcast arp request 
+            destination_Mac=s1.broadcast_Arp(DestinationIp,r,2);
+            //sender updates its arp cache
+            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+            s1.sendMessage(devices[sender-1],DestinationIp);
+            
           }
         }
        }
