@@ -99,7 +99,7 @@ class data_prompt{
    
     Switch s;
     cout<<endl;
-    
+    int select;
     if(choice==1){
     
      cout<<endl;
@@ -111,7 +111,7 @@ class data_prompt{
         cout<<"There should be atleast two devices. Enter valid number"<<endl;
         continue;
     }
-    int select;
+    
     map<int,string> flow;
     flow={
       {1,"Stop and Wait ARQ"},
@@ -123,6 +123,7 @@ class data_prompt{
     for(auto it:flow){
       cout<<it.first<<" : "<<it.second<<endl; 
     }
+
     cin>>select;
    
     if(select!=1 && select!=2){
@@ -303,7 +304,7 @@ class data_prompt{
   }
 };
 
-class network_prompt:public data_prompt{
+class network_prompt{
   public:
   Switch s1,s2;
   EndDevices end;
@@ -315,10 +316,11 @@ class network_prompt:public data_prompt{
     while(true){
      
      Router r;
+     data_prompt d1;
      string nid1=r.generate_NID();
      string nid2=r.generate_NID();
-     string MAC1=generateMacAddress();
-     string MAC2=generateMacAddress();
+     string MAC1=d1.generateMacAddress();
+     string MAC2=d1.generateMacAddress();
 
      r.setAddress(nid1,nid2,MAC1,MAC2);
      vector<string> ipv4;
@@ -334,21 +336,17 @@ class network_prompt:public data_prompt{
       }
      }
      //end devices in Network 1
-     devices.push_back(EndDevices(1,generateMacAddress(),ipv4[0]));
-     devices.push_back(EndDevices(2,generateMacAddress(),ipv4[1]));
+     devices.push_back(EndDevices(1,d1.generateMacAddress(),ipv4[0]));
+     devices.push_back(EndDevices(2,d1.generateMacAddress(),ipv4[1]));
     
       //end devices in Network 2
-     devices.push_back(EndDevices(4,generateMacAddress(),ipv4[2]));
-     devices.push_back(EndDevices(5,generateMacAddress(),ipv4[3]));
+     devices.push_back(EndDevices(4,d1.generateMacAddress(),ipv4[2]));
+     devices.push_back(EndDevices(5,d1.generateMacAddress(),ipv4[3]));
     
-     //connecting end devices to respective switches
      
-     s1.topology(devices[0]);
-     s1.topology(devices[1]);
      
-     s2.topology(devices[2]);
-     s2.topology(devices[3]);
     
+   
      //connecting switches to router
      r.ConnectSwitch(s1);
      r.ConnectSwitch(s2);
@@ -378,6 +376,11 @@ class network_prompt:public data_prompt{
         string deviceMac=devices[i].getMAC();
         devices[i].arp_cache(deviceIp,deviceMac);
        }
+       //connecting end devices to respective switches
+      s1.connected_devices.push_back(devices[0]);
+      s1.connected_devices.push_back(devices[1]);
+      s2.connected_devices.push_back(devices[2]);
+      s2.connected_devices.push_back(devices[3]);
        devices[sender-1].print_ArpCache();
        // if sender and reciever are in same network
        bool check=r.sameNID(SourceIp,DestinationIp);
@@ -509,16 +512,18 @@ class network_prompt:public data_prompt{
 
 class prompt{
    public:
+  
    void run(){
     while(true){
     cout<<endl;
     int choice,hubs,switches,both;
-
-    map<int,string> choose;
+     map<int,string> choose;
+    
     choose[0]="Hub";
     choose[1]="Switch";
     choose[2]="Router";
     cout<<"Choose a device "<<endl;
+    
     for(int i=0;i<choose.size();i++){
       cout<<i+1<<": "<<choose[i]<<endl;
     }
@@ -565,6 +570,7 @@ class prompt{
     }
     
     }
+   
    }
 };
   
