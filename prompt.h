@@ -327,77 +327,77 @@ class network_prompt{
      cout<<endl;
      cin>>scheme;
      cout<<endl;
+     //static Routing
      if(scheme==1){
-     Router r;
-     
-     string nid1=r.generate_NID();
-     string nid2=r.generate_NID();
-     string MAC1=d1.generateMacAddress();
-     string MAC2=d1.generateMacAddress();
+      Router r1,r2,r;
+      string nid1=create_NID();
+      string nid2=create_NID();
+      string nid3=create_NID();
+      string nid4=create_NID();
+      r1.setAddress(nid1,nid2,"",d1.generateMacAddress(),d1.generateMacAddress(),"");
+      r2.setAddress(nid3,nid4,"",d1.generateMacAddress(),d1.generateMacAddress(),"");
 
-     r.setAddress(nid1,nid2,"",MAC1,MAC2,"");
-     vector<string> ipv4;
-     for(int i=0;i<4;i++){
-      if(i<2){
-        ip=r.generate_classless_ip(nid1);
-        ipv4.push_back(ip);
+      vector<string> ipv4;
+        for(int i=0;i<4;i++){
+        if(i<2){
+          ip=r.generate_classless_ip(nid1);
+          ipv4.push_back(ip);
 
+        }
+        else{
+          ip=r.generate_classless_ip(nid4);
+          ipv4.push_back(ip);
+        }
       }
-      else{
-        ip=r.generate_classless_ip(nid2);
-        ipv4.push_back(ip);
-      }
-     }
-     //end devices in Network 1
-     devices.push_back(EndDevices(1,d1.generateMacAddress(),ipv4[0]));
-     devices.push_back(EndDevices(2,d1.generateMacAddress(),ipv4[1]));
-    
-      //end devices in Network 2
-     devices.push_back(EndDevices(4,d1.generateMacAddress(),ipv4[2]));
-     devices.push_back(EndDevices(5,d1.generateMacAddress(),ipv4[3]));
-    
-     
-     
-    
-   
-     //connecting switches to router
-     r.ConnectSwitch(s1);
-     r.ConnectSwitch(s2);
-     int sender, reciever;
-     end.prompt("Sender",4,mp);
-     cin>>sender;
-     end.prompt("Reciever",4,mp);
-     cin>>reciever;
-     //if sender and reciever are same
-      if(sender==reciever){
-      cout<<"Sender and reciever can't be same "<<endl;
-      continue;
-      }
-      cout<<"Enter a message "<<endl;
-      cin>>message;
-      devices[sender-1].getData(message);
-      string SourceIp=devices[sender-1].getIP();
-      string DestinationIp=devices[reciever-1].getIP();
-      cout<<endl;
-      cout<<endl;
-      cout<<"Source IP : "<<SourceIp<<endl;
-      cout<<"Destination IP : "<<DestinationIp<<endl;
-      cout<<endl;
-      //iniatialise arp cache
-       for(int i=0;i<4;i++){
-        string deviceIp=devices[i].getIP();
-        string deviceMac=devices[i].getMAC();
-        devices[i].arp_cache(deviceIp,deviceMac);
-       }
-       //connecting end devices to respective switches
-      s1.connected_devices.push_back(devices[0]);
-      s1.connected_devices.push_back(devices[1]);
-      s2.connected_devices.push_back(devices[2]);
-      s2.connected_devices.push_back(devices[3]);
-       devices[sender-1].print_ArpCache();
+      //  //end devices in Network 1
+      devices.push_back(EndDevices(1,d1.generateMacAddress(),ipv4[0]));
+      devices.push_back(EndDevices(2,d1.generateMacAddress(),ipv4[1]));
+      
+        //end devices in Network 2
+      devices.push_back(EndDevices(4,d1.generateMacAddress(),ipv4[2]));
+      devices.push_back(EndDevices(5,d1.generateMacAddress(),ipv4[3]));
+       //  //connecting switches to router
+      r1.ConnectSwitch(s1);
+      r2.ConnectSwitch(s2);
+      int sender, reciever;
+      end.prompt("Sender",4,mp);
+      cin>>sender;
+      end.prompt("Reciever",4,mp);
+      cin>>reciever;
+      //if sender and reciever are same
+        if(sender==reciever){
+        cout<<"Sender and reciever can't be same "<<endl;
+        continue;
+        }
+        cout<<"Enter a message "<<endl;
+        cin>>message;
+        devices[sender-1].getData(message);
+        string SourceIp=devices[sender-1].getIP();
+        string DestinationIp=devices[reciever-1].getIP();
+        cout<<endl;
+        cout<<endl;
+        cout<<"Source IP : "<<SourceIp<<endl;
+        cout<<"Destination IP : "<<DestinationIp<<endl;
+        cout<<endl;
+        //   //iniatialise arp cache
+        for(int i=0;i<4;i++){
+          string deviceIp=devices[i].getIP();
+          string deviceMac=devices[i].getMAC();
+          devices[i].arp_cache(deviceIp,deviceMac);
+        }
+        
+        //    //connecting end devices to respective switches
+        s1.connected_devices.push_back(devices[0]);
+        s1.connected_devices.push_back(devices[1]);
+        s2.connected_devices.push_back(devices[2]);
+        s2.connected_devices.push_back(devices[3]);
+           devices[sender-1].print_ArpCache();
+
+           
        // if sender and reciever are in same network
        bool check=r.sameNID(SourceIp,DestinationIp);
-       int network=r.NetworkNo(SourceIp);
+      
+          int network=r1.NetworkNo(SourceIp);
        if(check){
         
         //Both sender and reciever are in same network
@@ -409,6 +409,7 @@ class network_prompt{
           cout<<"Sender sends ARP request"<<endl;
           
           if(network==1){
+            
             string destination_Mac=s1.broadcast_Arp(DestinationIp,r,network);
             //sender updates its arp cache
             devices[sender-1].arp_cache(DestinationIp,destination_Mac);
@@ -437,82 +438,104 @@ class network_prompt{
             s2.sendMessage(devices[sender-1],DestinationIp);
           }
       
-       
-
        }
 
        }
-       else{
-       
-        //sender and reciever are in two different networks
-        //sender checks for destination ip in its arp cache
-        string result=devices[sender-1].arp[DestinationIp];
-         
-        //reciever is not in arp cache of sender
-        if(result.length()==0){
-          //sender sends arp request
-          cout<<endl;
-          cout<<"Sender sends ARP request"<<endl;
-          if(network==1){
-            //switch broadcast arp request
-           
-            string destination_Mac=s1.broadcast_Arp(DestinationIp,r,network);
-            // sender updates its arp cache
-            devices[sender-1].arp_cache(r.IP1,destination_Mac);
-            cout<<"Updated ARP cache :"<<endl;
-            devices[sender-1].print_ArpCache();
-            //print routing table 
-            r.Routing_Table();
+      else{
+        
+          //sender and reciever are in two different networks
+          //sender checks for destination ip in its arp cache
+          string result=devices[sender-1].arp[DestinationIp];
+          
+          //reciever is not in arp cache of sender
+          if(result.length()==0){
+            //sender sends arp request
             cout<<endl;
-            r.Print_Routing_Table();
-            //traverse through routing table and check for NID that matches destination ip
-            r.routing_decision(DestinationIp);
-            //check ARP CACHE of router
-            r.arp_cache(r.IP1,r.MAC1);
-            r.arp_cache(r.IP2,r.MAC2);
-            cout<<endl;
-            r.print_ArpCache();
-            cout<<endl;
-            cout<<"Router sends ARP request "<<endl;
-            cout<<endl;
-            //switch will broadcast arp request 
-            destination_Mac=s2.broadcast_Arp(DestinationIp,r,1);
-            //sender updates its arp cache
-            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
-            s2.sendMessage(devices[sender-1],DestinationIp);
+            cout<<"Sender sends ARP request"<<endl;
+            if(network==1){
+              //switch broadcast arp request
             
-          }
-          else if(network==2){
-            //switch broadcast arp request
-           
-            string destination_Mac=s2.broadcast_Arp(DestinationIp,r,network);
-            // sender updates its arp cache
-            devices[sender-1].arp_cache(r.IP2,destination_Mac);
-            cout<<"Updated Arp cache :"<<endl;
-            devices[sender-1].print_ArpCache();
-            //print routing table 
-            r.Routing_Table();
-            cout<<endl;
-            r.Print_Routing_Table();
-            //traverse through routing table and check for NID that matches destination ip
-            r.routing_decision(DestinationIp);
-            //check ARP CACHE of router
-            r.arp_cache(r.IP1,r.MAC1);
-            r.arp_cache(r.IP2,r.MAC2);
-            cout<<endl;
-            r.print_ArpCache();
-            cout<<endl;
-            cout<<"Router sends ARP request "<<endl;
-            cout<<endl;
-            //switch will broadcast arp request 
-            destination_Mac=s1.broadcast_Arp(DestinationIp,r,2);
-            //sender updates its arp cache
-            devices[sender-1].arp_cache(DestinationIp,destination_Mac);
-            s1.sendMessage(devices[sender-1],DestinationIp);
+              string destination_Mac=s1.broadcast_Arp(DestinationIp,r1,network);
+              // sender updates its arp cache
+              devices[sender-1].arp_cache(r1.IP1,destination_Mac);
+              cout<<"Updated ARP cache :"<<endl;
+              devices[sender-1].print_ArpCache();
+              //print routing table 
+              r1.Routing_Table(r2,1);
+              cout<<endl;
+              r1.Print_Routing_Table(network);
+               //check ARP CACHE of router
+              r1.arp_cache(r1.IP1,r1.MAC1);
+              r1.arp_cache(r1.IP2,r1.MAC2);
+              r1.arp_cache(r2.IP1,r2.MAC1);
+              cout<<endl;
+              r1.print_ArpCache(network);
+              cout<<endl;
+              //traverse through routing table and check for NID that matches destination ip
+              r1.routing_decision(DestinationIp);
+             
+              r2.Routing_Table(r1,2);
+              cout<<endl;
+              r2.Print_Routing_Table(2);
+               //check ARP CACHE of router
+              r2.arp_cache(r2.IP1,r2.MAC1);
+              r2.arp_cache(r2.IP2,r2.MAC2);
+              r2.arp_cache(r1.IP2,r1.MAC2);
+              cout<<endl;
+              r2.print_ArpCache(2);
+              cout<<endl;
+              cout<<"Router 2 sends ARP request "<<endl;
+              cout<<endl;
+              //switch will broadcast arp request 
+              destination_Mac=s2.broadcast_Arp(DestinationIp,r,1);
+              //sender updates its arp cache
+              devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+              s2.sendMessage(devices[sender-1],DestinationIp);
             
+            }
+            else if(network==2){
+              //switch broadcast arp request
+            
+              string destination_Mac=s2.broadcast_Arp(DestinationIp,r2,network);
+              // sender updates its arp cache
+              devices[sender-1].arp_cache(r2.IP2,destination_Mac);
+              cout<<"Updated ARP cache :"<<endl;
+              devices[sender-1].print_ArpCache();
+              //print routing table 
+              r2.Routing_Table(r1,2);
+              cout<<endl;
+              r2.Print_Routing_Table(network);
+              //check ARP CACHE of router
+              r2.arp_cache(r2.IP1,r2.MAC1);
+              r2.arp_cache(r2.IP2,r2.MAC2);
+              r2.arp_cache(r1.IP2,r2.MAC2);
+              cout<<endl;
+              r2.print_ArpCache(network);
+              cout<<endl;
+              //traverse through routing table and check for NID that matches destination ip
+              r2.routing_decision(DestinationIp);
+             
+              r1.Routing_Table(r2,1);
+              cout<<endl;
+              r1.Print_Routing_Table(1);
+               //check ARP CACHE of router 1
+              r1.arp_cache(r1.IP1,r1.MAC1);
+              r1.arp_cache(r1.IP2,r1.MAC2);
+              r1.arp_cache(r2.IP1,r2.MAC1);
+              cout<<endl;
+              r1.print_ArpCache(1);
+              cout<<endl;
+              cout<<"Router 1 sends ARP request "<<endl;
+              cout<<endl;
+              //switch will broadcast arp request 
+              destination_Mac=s1.broadcast_Arp(DestinationIp,r,2);
+              //sender updates its arp cache
+              devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+              s1.sendMessage(devices[sender-1],DestinationIp);
+            }
           }
-        }
-       }
+      }
+  
      }
      //dynamic routing
     else if(scheme==2){

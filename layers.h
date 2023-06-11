@@ -275,8 +275,12 @@ class EndDevices{
    void print_ArpCache(){
         cout<<endl;
         cout<<"ARP Cache of sender is as :"<<endl;
+        cout<<endl;
+        cout<<"IP\t\t\tMAC\n";
+        cout<<endl;
         for(auto it: arp){
-          cout<<"IP : "<<it.first<<" -> "<<"MAC: "<<it.second<<endl;
+          cout<<it.first<<"\t\t"<<it.second<<endl;
+          cout<<endl;
         }
    }
 };
@@ -385,7 +389,7 @@ class Router: public EndDevices{
  const int INF = 99999;
   string IP1,IP2,IP3,MAC1,MAC2,MAC3;
   vector<Switch> connected_devices;
-  map<string,pair<int,int>> routing_table;
+  map<string,pair<string,string>> routing_table;
   //intialising ip and mac of interfaces of router
   Router(){}
   Router(int Id){
@@ -401,7 +405,7 @@ class Router: public EndDevices{
     this->MAC2=MAC2;
     this->IP3=MAC3;
   }
-
+ 
  
   //connect switch to router
   void ConnectSwitch(Switch& s){
@@ -463,15 +467,22 @@ int NetworkNo(string sourceIp){
     return 2;
   }
 }
-void Routing_Table(){
+void Routing_Table(Router &r,int source){
   //manually configure the router
-  routing_table[IP1]={1,0};
-  routing_table[IP2]={2,0};
+  //NID  INTERFACE NEXT HOP
+  routing_table[IP1]={"1","0"};
+  routing_table[IP2]={"2","0"};
+  if(source==1){
+  routing_table[r.IP2]={"2",r.IP1};
+  }
+  else{
+    routing_table[r.IP1]={"2",r.IP2};
+  }
 }
-void Print_Routing_Table() {
+void Print_Routing_Table(int source) {
   cout<<endl;
   std::cout << std::endl;
-  cout<<"Routing Table "<<endl;
+  cout<<"Routing Table of Router "<<source<<endl;
   std::cout << std::left << std::setw(15) << "NID";
   std::cout << std::left << std::setw(12) << "Interface";
   std::cout << std::left << std::setw(10) << "Next Hop" << std::endl;
@@ -493,16 +504,20 @@ void routing_decision(string destinationIp){
   for(auto it:routing_table){
     //Check if NetworkId matches then break , it.first is NID HERE
     if(sameNID(it.first,destinationIp)){
-       cout<<"Send packet to Network "<<it.first<<" on interface "<<it.second.first<<endl;
+       cout<<"Sending packet to Network "<<it.first<<" on interface "<<it.second.first<<endl;
        break;
     }
   }
 }
-void print_ArpCache(){
+void print_ArpCache(int source){
         cout<<endl;
-        cout<<"ARP Cache of Router is as :"<<endl;
+        cout<<"ARP Cache of Router "<<source<<" is as :"<<endl;
+        cout<<endl;
+        cout<<"IP\t\tMAC\n";
+        cout<<endl;
         for(auto it: arp){
-          cout<<"IP : "<<it.first<<" -> "<<"MAC: "<<it.second<<endl;
+          cout<<it.first<<"\t"<<it.second<<endl;
+          cout<<endl;
         }
    }
 
