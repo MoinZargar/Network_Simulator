@@ -373,18 +373,36 @@ class hub{
 };
 
 
+
+
+
 class Router: public EndDevices{
  public:
-  string IP1,IP2,MAC1,MAC2;
+ int id;
+ int source;
+ int destination;
+ int weight;
+ const int INF = 99999;
+  string IP1,IP2,IP3,MAC1,MAC2,MAC3;
   vector<Switch> connected_devices;
   map<string,pair<int,int>> routing_table;
   //intialising ip and mac of interfaces of router
-  void setAddress(string IP1,string IP2,string  MAC1,string  MAC2){
+  Router(){}
+  Router(int Id){
+        id=Id;
+  }
+  int getId(){
+    return id;
+  }
+  void setAddress(string IP1,string IP2,string IP3,string  MAC1,string  MAC2,string MAC3){
     this->IP1=IP1;
     this->IP2=IP2;
     this->MAC1=MAC1;
     this->MAC2=MAC2;
+    this->IP3=MAC3;
   }
+
+ 
   //connect switch to router
   void ConnectSwitch(Switch& s){
     connected_devices.push_back(s);
@@ -487,6 +505,78 @@ void print_ArpCache(){
           cout<<"IP : "<<it.first<<" -> "<<"MAC: "<<it.second<<endl;
         }
    }
+
+ void BellmanFord(const std::vector<std::vector<int>>& edges, int numVertices, int source) {
+    std::vector<int> distance(numVertices, 1e9);
+    distance[source] = 0;
+
+    std::vector<int> nextHop(numVertices, -1); // Next hop router for each destination
+
+    // Relax all edges numVertices - 1 times
+    for (int i = 1; i <= numVertices - 1; ++i) {
+        for (const auto& edge : edges) {
+            int u = edge[0];
+            int v = edge[1];
+            int weight = edge[2];
+
+            if (distance[u] != 1e9 && distance[u] + weight < distance[v]) {
+                distance[v] = distance[u] + weight;
+                nextHop[v] = u; // Update next hop router
+            }
+        }
+    }
+
+    // Print the routing table
+    cout<<endl;
+    cout<<"Final Routing table"<<endl;
+    std::cout << "Routing table for Router " << source << ":\n";
+    std::cout << "Destination\tNext Hop\tCost\n";
+    for (int i = 0; i < numVertices; ++i) {
+        std::cout<<"R" <<i << "\t\t";
+        if (distance[i] == 1e9) {
+            std::cout << "-\t\t";
+        } else if (i == source) {
+            // std::cout <<"R"<< i << "\t\t" << distance[i] << "\n";
+            std::cout << "-\t\t" << distance[i] << "\n";
+        } else {
+            if (nextHop[i] != -1 && source!=nextHop[i]) {
+                std::cout <<"R"<< nextHop[i] << "\t\t";
+                
+            } else {
+                std::cout << "-\t\t";
+            }
+            std::cout << distance[i] << "\n";
+        }
+    }
+    std::cout << "\n";
+}   
+void initial_Routing_table(vector<vector<int>> &edges,int numVertices){
+    // Print initial routing tables
+    std::cout << "Initial Routing Tables:\n";
+    for (int source = 0; source < numVertices; ++source) {
+        std::cout << "Routing table for Router " << source << ":\n";
+        std::cout << "Destination\tNext Hop\tCost\n";
+        for (int i = 0; i < numVertices; ++i) {
+            std::cout << "R" << i << "\t\t";
+            if (i == source) {
+                std::cout <<"-\t\t0\n";
+            } else {
+                bool directlyConnected = false;
+                for (const auto& edge : edges) {
+                    if (edge[0] == source && edge[1] == i) {
+                        std::cout << "-\t\t" << edge[2] << "\n";
+                        directlyConnected = true;
+                        break;
+                    }
+                }
+                if (!directlyConnected) {
+                    std::cout << "-\t\t-\n";
+                }
+            }
+        }
+        std::cout << "\n";
+    }
+}
 };
 
 class Switch{
@@ -652,5 +742,7 @@ class Switch{
            string source_mac=devices.getMAC();
            cout<<devices.SendData()<<" sent successfully from device with MAC "<<source_mac<<" to "<<destination_mac<<endl;
    }
+ 
 };
+
 

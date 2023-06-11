@@ -312,17 +312,30 @@ class network_prompt{
   map<int,bool> mp;
   string message;
   string ip;
+  int scheme;
+  data_prompt d1;
+  Router rt;
+  string create_NID(){
+          return rt.generate_NID();
+  }
   void run(){
     while(true){
-     
+     cout<<endl;
+     cout<<"Select routing scheme "<<endl;
+     cout<<"1. Static Routing"<<endl;
+     cout<<"2. Dynamic Routing"<<endl;
+     cout<<endl;
+     cin>>scheme;
+     cout<<endl;
+     if(scheme==1){
      Router r;
-     data_prompt d1;
+     
      string nid1=r.generate_NID();
      string nid2=r.generate_NID();
      string MAC1=d1.generateMacAddress();
      string MAC2=d1.generateMacAddress();
 
-     r.setAddress(nid1,nid2,MAC1,MAC2);
+     r.setAddress(nid1,nid2,"",MAC1,MAC2,"");
      vector<string> ipv4;
      for(int i=0;i<4;i++){
       if(i<2){
@@ -500,11 +513,81 @@ class network_prompt{
           }
         }
        }
-     
+     }
+     //dynamic routing
+    else if(scheme==2){
+         int enter;
+         cout<<endl;
+         
+         cout<<endl;
+         
        
-       break;
+        cout<<"Protocol Used : RIP (Routing Information Protocol)"<<endl;
+        cout<<endl;
+          //RIP
+          //configure routers
+          // Read the number of vertices
+          int numVertices;
+          std::cout << "Enter the number of Routers: ";
+          std::cin >> numVertices;
+          if(numVertices>15){
+            cout<<"Maximim Hop Count in RIP is 15"<<endl;
+            cout<<"Enter a valid number "<<endl;
+            continue;
+          }
+          // Read the graph edges
+         vector<pair<Router,Router>> routers;
+         vector<vector<int>> edges;
+          int numEdges;
+          cout<<endl;
+          std::cout << "Enter the number of links : "<<endl;
+          cin >> numEdges;
+          cout<<endl;
+          
+          cout<<endl;
+          cout<<"Input router number as per 0 based indexing"<<endl;
+          for (int i = 0; i < numEdges; ++i) {
+              
+              int  source,destination,wt;
+              
+              cout << "Edge " << i + 1 << ":\n";
+              cout << "First Router: ";
+              cin>>source;
+              Router r1(source);
+             
+              cout << "Second Router: ";
+              cin >> destination;
+              Router r2(destination);
+              
+              routers.push_back({r1,r2});
+            }
+            for(auto it:routers){
+              vector<int> temp;
+              temp={it.first.getId(),it.second.getId(),1};
+              edges.push_back(temp);
+              temp.clear();
+              temp={it.second.getId(),it.first.getId(),1};
+              edges.push_back(temp);
+            }
+            
+           Router r;
+           r.initial_Routing_table(edges,numVertices);
+           cout<<endl;
+            for (int source = 0; source < numVertices; ++source) {
+                r.BellmanFord(edges, numVertices, source);
+            }
+
+            
+         
+    }  
+    else{
+      cout<<"Invalid Choice"<<endl;
+      continue;
     }
+       break; 
+     }
     
+   
  
   
   }
