@@ -8,6 +8,7 @@
 #include <bitset>
 #include <algorithm>
 #include<iomanip>
+#include <cstring>
 using namespace std;
 
 // Forward declaration of the Switch class
@@ -55,7 +56,65 @@ class EndDevices{
    string SendData(){
     return message;
    }
+   //Application layer protocol
+   // Callback function to write received data into a string
+    size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
+        size_t totalSize = size * nmemb;
+        output->append(static_cast<char*>(contents), totalSize);
+        return totalSize;
+}
 
+   int http(){
+      cout<<"Http GET response from www.google.com"<<endl;
+      cout<<endl;
+        std::string response;
+
+    // Create the command for the GET request using cURL
+    const char* command = "curl -s https://www.google.com";  // Replace with the desired URL
+
+    // Open a pipe to read the response
+    FILE* pipe = popen(command, "r");
+    if (!pipe) {
+        std::cerr << "Error executing command." << std::endl;
+        return 1;
+    }
+
+    // Read the response from the pipe
+    char buffer[128];
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        response += buffer;
+    }
+
+    // Close the pipe
+    pclose(pipe);
+
+    // Print the response
+    cout << "Response:\n" << response << std::endl;
+   }
+
+
+   void dns(){
+      cout<<"DNS "<<endl;
+      cout<<endl;
+    string domain = "google.com";
+
+    // Build the command to execute nslookup or dig
+    string command = "nslookup " + domain;
+
+    // Execute the command and capture the output
+    FILE* stream = popen(command.c_str(), "r");
+    if (stream) {
+        // Read the command output line by line
+        char buffer[256];
+        while (!feof(stream) && fgets(buffer, sizeof(buffer), stream) != nullptr) {
+            std::cout << buffer;
+        }
+        pclose(stream);
+    } else {
+        std::cout << "Failed to execute the command." << std::endl;
+    }
+
+   }
    void sendAck(int reciever){
      ack=true;
      cout<<endl;
@@ -376,7 +435,27 @@ class hub{
   }
 };
 
+class Process {
+public:
+    int processID;
+    int portNumber;
+    int assignPortNumber(map<int, Process> &processMap) {
+    static int nextPortNumber = 1024;
 
+    // Increment the nextPortNumber until it is within the valid range
+    while (nextPortNumber < 1024 || nextPortNumber > 65535 || processMap.find(nextPortNumber) != processMap.end()) {
+        nextPortNumber++;
+        
+        // Wrap around to 1024 if nextPortNumber exceeds 65535
+        if (nextPortNumber > 65535) {
+            nextPortNumber = 1024;
+        }
+    }
+
+    return nextPortNumber++;
+}
+
+};
 
 
 
@@ -387,6 +466,7 @@ class Router: public EndDevices{
  int destination;
  int weight;
  const int INF = 99999;
+  
   string IP1,IP2,IP3,MAC1,MAC2,MAC3;
   vector<Switch> connected_devices;
   map<string,pair<string,string>> routing_table;
@@ -592,6 +672,8 @@ void initial_Routing_table(vector<vector<int>> &edges,int numVertices){
         std::cout << "\n";
     }
 }
+
+
 };
 
 class Switch{

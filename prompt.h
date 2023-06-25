@@ -309,6 +309,8 @@ class network_prompt{
   Switch s1,s2;
   EndDevices end;
   vector<EndDevices> devices;
+  vector<Process> processes;
+  map<int,Process> processMap;
   map<int,bool> mp;
   string message;
   string ip;
@@ -359,6 +361,16 @@ class network_prompt{
        //  //connecting switches to router
       r1.ConnectSwitch(s1);
       r2.ConnectSwitch(s2);
+      //create processes on source machine
+      for(int i=0;i<4;i++){
+        Process p;
+        processes.push_back(p);
+
+      }
+      for(int i=0;i<4;i++){
+        
+        processMap[processes[i].assignPortNumber(processMap)] = processes[i];
+      }
       int sender, reciever;
       end.prompt("Sender",4,mp);
       cin>>sender;
@@ -369,15 +381,32 @@ class network_prompt{
         cout<<"Sender and reciever can't be same "<<endl;
         continue;
         }
+        cout<<endl;
+        int App_Protocol;
+        cout<<"Choose a protocol"<<endl;
+        cout<<endl;
+        cout<<"1. Http"<<endl;
+        cout<<"2. DNS"<<endl;
+        cin>>App_Protocol;
+        cout<<endl;
         cout<<"Enter a message "<<endl;
         cin>>message;
+        cout<<endl;
+        
         devices[sender-1].getData(message);
         string SourceIp=devices[sender-1].getIP();
         string DestinationIp=devices[reciever-1].getIP();
         cout<<endl;
         cout<<endl;
+        int sourcePort,destinationPort;
+        int random=rand()%5;
+        sourcePort=processes[random].portNumber;
+        destinationPort=(App_Protocol==1)?80:53;
         cout<<"Source IP : "<<SourceIp<<endl;
+        cout<<"Source Port : "<<sourcePort<<endl;
         cout<<"Destination IP : "<<DestinationIp<<endl;
+        cout<<"Destination Port : "<<destinationPort<<endl;
+        sleep(4);
         cout<<endl;
         //   //iniatialise arp cache
         for(int i=0;i<4;i++){
@@ -417,7 +446,26 @@ class network_prompt{
             cout<<"Updated Arp cache :"<<endl;
             devices[sender-1].print_ArpCache();
             //send message
-            s1.sendMessage(devices[sender-1],DestinationIp);
+            cout<<endl;
+              sleep(4);
+              cout<<endl;
+             cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
+              s1.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
+
+              
+
           }
           else if(network==2){
             string destination_Mac=s2.broadcast_Arp(DestinationIp,r,network);
@@ -426,16 +474,59 @@ class network_prompt{
             cout<<"Updated Arp cache :"<<endl;
             devices[sender-1].print_ArpCache();
             //send message
-            s2.sendMessage(devices[sender-1],DestinationIp);
+            cout<<endl;
+            sleep(4);
+           cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
+              s2.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
           }
         }
         else{
           //destination ip is in arp cache of sender no need to send arp request
           if(network==1){
-            s1.sendMessage(devices[sender-1],DestinationIp);
+            cout<<endl;
+           cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
+              s1.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
         }
           else if(network==2){
-            s2.sendMessage(devices[sender-1],DestinationIp);
+             cout<<endl;
+           cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
+              s2.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
           }
       
        }
@@ -490,7 +581,22 @@ class network_prompt{
               destination_Mac=s2.broadcast_Arp(DestinationIp,r,1);
               //sender updates its arp cache
               devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+              cout<<endl;
+              sleep(4);
+           cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
               s2.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
             
             }
             else if(network==2){
@@ -531,7 +637,23 @@ class network_prompt{
               destination_Mac=s1.broadcast_Arp(DestinationIp,r,2);
               //sender updates its arp cache
               devices[sender-1].arp_cache(DestinationIp,destination_Mac);
+               cout<<endl;
+               sleep(4);
+               cout<<"Log of UDP Packets sent from client to server"<<endl;
+              cout<<endl;
+              cout<<"Protocol used : Selective Repeat"<<endl;
+              cout<<endl;
+              end.Selective_Repeat();
+              cout<<endl;
+
               s1.sendMessage(devices[sender-1],DestinationIp);
+              cout<<endl;
+              if (destinationPort == 80) {
+                    end.http();
+                } 
+              else {
+                    end.dns();
+              }
             }
           }
       }
