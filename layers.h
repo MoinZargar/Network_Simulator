@@ -64,54 +64,59 @@ class EndDevices{
         return totalSize;
 }
 
-   int http(){
-      cout<<"Http GET response from www.google.com"<<endl;
-      cout<<endl;
-        std::string response;
+   int http() {
+   string domain;
+    cout << "Enter domain name: ";
+    cin >> domain;
+    cout << std::endl;
 
-    // Create the command for the GET request using cURL
-    const char* command = "curl -s https://www.google.com";  // Replace with the desired URL
+    string command = "curl -s https://" + domain;
 
     // Open a pipe to read the response
-    FILE* pipe = popen(command, "r");
+    FILE* pipe = popen(command.c_str(), "r"); 
     if (!pipe) {
-        std::cerr << "Error executing command." << std::endl;
+        cerr << "Error executing command." << std::endl;
         return 1;
     }
 
-    // Read the response from the pipe
+   
+    string response;
     char buffer[128];
     while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
         response += buffer;
     }
 
-    // Close the pipe
+   
     pclose(pipe);
 
-    // Print the response
-    cout << "Response:\n" << response << std::endl;
-   }
+    
+    std::cout << "Response:\n" << response << std::endl;
+
+    return 0;
+}
 
 
    void dns(){
       cout<<"DNS "<<endl;
       cout<<endl;
-    string domain = "google.com";
+      string domain;
+      cout<<"Enter domain name "<<endl;
+      cin>>domain;
 
-    // Build the command to execute nslookup or dig
+    
     string command = "nslookup " + domain;
 
-    // Execute the command and capture the output
+    
     FILE* stream = popen(command.c_str(), "r");
     if (stream) {
-        // Read the command output line by line
+       
         char buffer[256];
         while (!feof(stream) && fgets(buffer, sizeof(buffer), stream) != nullptr) {
-            std::cout << buffer;
+            cout << buffer;
         }
         pclose(stream);
     } else {
-        std::cout << "Failed to execute the command." << std::endl;
+        cout << "Failed to execute the command." << endl;
     }
 
    }
@@ -439,20 +444,15 @@ class Process {
 public:
     int processID;
     int portNumber;
-    int assignPortNumber(map<int, Process> &processMap) {
-    static int nextPortNumber = 1024;
+    int assignPortNumber(std::map<int, Process>& processMap) {
+    std::srand(std::time(nullptr));
 
-    // Increment the nextPortNumber until it is within the valid range
-    while (nextPortNumber < 1024 || nextPortNumber > 65535 || processMap.find(nextPortNumber) != processMap.end()) {
-        nextPortNumber++;
-        
-        // Wrap around to 1024 if nextPortNumber exceeds 65535
-        if (nextPortNumber > 65535) {
-            nextPortNumber = 1024;
-        }
+    long long port =rand()%65535;
+    while (processMap.find(port) != processMap.end() || port<1024) {
+        port =rand()%65535;
     }
 
-    return nextPortNumber++;
+    return port;
 }
 
 };
@@ -601,13 +601,13 @@ void print_ArpCache(int source){
         }
    }
 
- void BellmanFord(const std::vector<std::vector<int>>& edges, int numVertices, int source) {
-    std::vector<int> distance(numVertices, 1e9);
+ void RIP(const std::vector<std::vector<int>>& edges, int numVertices, int source) {
+    vector<int> distance(numVertices, 1e9);
     distance[source] = 0;
 
-    std::vector<int> nextHop(numVertices, -1); // Next hop router for each destination
+    vector<int> nextHop(numVertices, -1); 
 
-    // Relax all edges numVertices - 1 times
+    
     for (int i = 1; i <= numVertices - 1; ++i) {
         for (const auto& edge : edges) {
             int u = edge[0];
@@ -616,7 +616,7 @@ void print_ArpCache(int source){
 
             if (distance[u] != 1e9 && distance[u] + weight < distance[v]) {
                 distance[v] = distance[u] + weight;
-                nextHop[v] = u; // Update next hop router
+                nextHop[v] = u; 
             }
         }
     }
@@ -627,26 +627,26 @@ void print_ArpCache(int source){
     std::cout << "Routing table for Router " << source << ":\n";
     std::cout << "Destination\tNext Hop\tCost\n";
     for (int i = 0; i < numVertices; ++i) {
-        std::cout<<"R" <<i << "\t\t";
+        cout<<"R" <<i << "\t\t";
         if (distance[i] == 1e9) {
-            std::cout << "-\t\t";
+            cout << "-\t\t";
         } else if (i == source) {
             // std::cout <<"R"<< i << "\t\t" << distance[i] << "\n";
-            std::cout << "-\t\t" << distance[i] << "\n";
+            cout << "-\t\t" << distance[i] << "\n";
         } else {
             if (nextHop[i] != -1 && source!=nextHop[i]) {
-                std::cout <<"R"<< nextHop[i] << "\t\t";
+                cout <<"R"<< nextHop[i] << "\t\t";
                 
             } else {
-                std::cout << "-\t\t";
+                cout << "-\t\t";
             }
-            std::cout << distance[i] << "\n";
+            cout << distance[i] << "\n";
         }
     }
-    std::cout << "\n";
+    cout << "\n";
 }   
 void initial_Routing_table(vector<vector<int>> &edges,int numVertices){
-    // Print initial routing tables
+    
     std::cout << "Initial Routing Tables:\n";
     for (int source = 0; source < numVertices; ++source) {
         std::cout << "Routing table for Router " << source << ":\n";
@@ -659,7 +659,7 @@ void initial_Routing_table(vector<vector<int>> &edges,int numVertices){
                 bool directlyConnected = false;
                 for (const auto& edge : edges) {
                     if (edge[0] == source && edge[1] == i) {
-                        std::cout << "-\t\t" << edge[2] << "\n";
+                        cout << "-\t\t" << edge[2] << "\n";
                         directlyConnected = true;
                         break;
                     }

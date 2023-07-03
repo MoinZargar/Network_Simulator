@@ -399,8 +399,8 @@ class network_prompt{
         cout<<endl;
         cout<<endl;
         int sourcePort,destinationPort;
-        int random=rand()%5;
-        sourcePort=processes[random].portNumber;
+        int random=rand()%4;
+        sourcePort=processes[random].assignPortNumber(processMap);
         destinationPort=(App_Protocol==1)?80:53;
         cout<<"Source IP : "<<SourceIp<<endl;
         cout<<"Source Port : "<<sourcePort<<endl;
@@ -449,7 +449,7 @@ class network_prompt{
             cout<<endl;
               sleep(4);
               cout<<endl;
-             cout<<"Log of UDP Packets sent from client to server"<<endl;
+             cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -476,7 +476,7 @@ class network_prompt{
             //send message
             cout<<endl;
             sleep(4);
-           cout<<"Log of UDP Packets sent from client to server"<<endl;
+           cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -496,7 +496,7 @@ class network_prompt{
           //destination ip is in arp cache of sender no need to send arp request
           if(network==1){
             cout<<endl;
-           cout<<"Log of UDP Packets sent from client to server"<<endl;
+           cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -513,7 +513,7 @@ class network_prompt{
         }
           else if(network==2){
              cout<<endl;
-           cout<<"Log of UDP Packets sent from client to server"<<endl;
+           cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -583,7 +583,7 @@ class network_prompt{
               devices[sender-1].arp_cache(DestinationIp,destination_Mac);
               cout<<endl;
               sleep(4);
-           cout<<"Log of UDP Packets sent from client to server"<<endl;
+           cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -639,7 +639,7 @@ class network_prompt{
               devices[sender-1].arp_cache(DestinationIp,destination_Mac);
                cout<<endl;
                sleep(4);
-               cout<<"Log of UDP Packets sent from client to server"<<endl;
+               cout<<"Log of TCP Packets sent from client to server"<<endl;
               cout<<endl;
               cout<<"Protocol used : Selective Repeat"<<endl;
               cout<<endl;
@@ -671,7 +671,7 @@ class network_prompt{
         cout<<endl;
           //RIP
           //configure routers
-          // Read the number of vertices
+         
           int numVertices;
           std::cout << "Enter the number of Routers: ";
           std::cin >> numVertices;
@@ -680,7 +680,7 @@ class network_prompt{
             cout<<"Enter a valid number "<<endl;
             continue;
           }
-          // Read the graph edges
+         
          vector<pair<Router,Router>> routers;
          vector<vector<int>> edges;
           int numEdges;
@@ -719,7 +719,7 @@ class network_prompt{
            r.initial_Routing_table(edges,numVertices);
            cout<<endl;
             for (int source = 0; source < numVertices; ++source) {
-                r.BellmanFord(edges, numVertices, source);
+                r.RIP(edges, numVertices, source);
             }
 
             
